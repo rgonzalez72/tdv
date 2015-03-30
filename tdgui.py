@@ -8,6 +8,10 @@ class TDGUI (wx.Frame):
 
         self.statusbas = self.CreateStatusBar ()
         self.CreateMenuBar ()
+
+        self.graphics = Graphics (self)
+        self.graphics.SetFocus ()
+        
         
         self.Centre ()
         self.Show (True)
@@ -73,6 +77,25 @@ class AboutDialog (wx.Dialog):
 
     def OnClose (self, e):
         self.Close ()
+
+class Graphics (wx.Panel):
+    def __init__ (self, parent):
+        wx.Panel.__init__ (self, parent, wx.HSCROLL | wx.VSCROLL)
+
+        vbox = wx.BoxSizer (wx.VERTICAL)
+
+        for i in range (0,15):
+            l = wx.StaticText (self, wx.ID_ANY, "123" + str(i))
+            hbox = wx.BoxSizer (wx.HORIZONTAL)
+            hbox.Add (l, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 10)
+            vbox.Add (hbox, 0, wx.CENTER)
+
+        self.SetSizer (vbox)
+
+#self.Bind (wx.EVT_PAINT, self.OnPaint)
+
+    def OnPaint (self, event):
+        dc = wx.PaintDC(self)
 
 app = wx.App ()
 TDGUI (None, -1, "Time Doctor GUI")
