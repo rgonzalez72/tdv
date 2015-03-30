@@ -17,6 +17,7 @@ class TDGUI (wx.Frame):
         filem = wx.Menu ()
         helpm = wx.Menu ()
 
+        Oitem = filem.Append (wx.ID_FILE, "&Open", "Open TD file")
         Qitem = filem.Append (wx.ID_EXIT, "&Quit", "Quit application")
         menubar.Append (filem, "&File")
         menubar.Append (helpm, "&Help")
@@ -26,6 +27,7 @@ class TDGUI (wx.Frame):
 
         self.Bind (wx.EVT_MENU, self.OnQuit, Qitem)
         self.Bind (wx.EVT_MENU, self.OnAbout, Aitem)
+        self.Bind (wx.EVT_MENU, self.OnOpenFile, Oitem)
 
     def OnQuit (self, e):
         self.Close ()
@@ -34,6 +36,9 @@ class TDGUI (wx.Frame):
         A = AboutDialog (self, wx.ID_ANY, "About TDV") 
         A.Centre ()
         A.ShowModal ()
+
+    def OnOpenFile (self, e):
+        print "OnOpenFile"
 
 class AboutDialog (wx.Dialog):
     def __init__ (self, parent, id, title):
