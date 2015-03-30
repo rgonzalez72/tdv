@@ -68,7 +68,8 @@ class Task (object):
                     summary ['duration'] += e.getDuration ()
         summary ['percentage'] = float (summary ['duration']) * 100.0 /\
                         float (endTime - beginTime)
-        return summary 
+        self._summary = summary
+        return self._summary 
 
     def __eq__ (self, other):
         return self._code == other._code
@@ -97,11 +98,12 @@ class TaskList (object):
         self._tasks.append (t)
 
     def findTaskByCode (self, code):
-        T = None
+        theTask = None
         for T in self._tasks:
             if T.getCode () == code:
+                theTask = T
                 break
-        return T
+        return theTask
 
     def readTDFile (self, fileName):
         fp = open (fileName, "r")
@@ -122,18 +124,24 @@ class TaskList (object):
             elif line.startswith ("STO"):
                 parts = line.strip ().split (" ")
                 endTime = int (parts[3])
-                code = int (parts[2])
+                code = parts[2]
                 T = self.findTaskByCode (code)
                 E = TaskExecution (stTime, endTime, currentCore)
-                print E
                 T.addExecution (E)
                 if endTime > self._lastTime:
                     self._lastTime = endTime
             
-        self._tasks = sorted (self._tasks)
 
     def getLastTime (self):
         return self._lastTime
+
+
+    def sortByName (self):
+        self._tasks = sorted (self._tasks)
+
+    def sortByExecutionTime (self):
+        # TODO
+        pass
 
 if __name__ == '__main__':
     T = TaskList ()
