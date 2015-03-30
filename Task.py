@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 
 class TaskExecution (object):
     def __init__ (self, timeIn, timeOut, core):
@@ -29,12 +30,15 @@ class Task (object):
 
     TYPE_TASK = "0"
     TYPE_ISR = "1"
+    TYPE_OTRO = "8"
 
     TYPE_NAME_TASK = "Task"
     TYPE_NAME_ISR = "Isr"
+    TYPE_NAME_OTRO = "Otro"
 
     TYPE_NAMES = {TYPE_TASK : TYPE_NAME_TASK,
-                  TYPE_ISR : TYPE_NAME_ISR }
+                  TYPE_ISR : TYPE_NAME_ISR,
+                  TYPE_OTRO : TYPE_NAME_OTRO, }
 
     def __init__ (self, name, taskType, code):
         self._name = name
@@ -66,16 +70,77 @@ class Task (object):
                         float (endTime - beginTime)
         return summary 
 
+    def __eq__ (self, other):
+        return self._code == other._code
+
+    def __bt__ (self, other):
+        return self._name > other._name
+
+    def __be__ (self, other):
+        return self._name >= other._name
+
+    def __lt__ (self, other):
+        return self._name < other._name
+
+    def __le__ (self, other):
+        return self._name <= other._name
+
+    def getCode (self):
+        return self._code
+
 class TaskList (object):
     def __init__ (self):
         self._tasks =[]
+        self._lastTime = 0
 
     def addTask (self, t): 
         self._tasks.append (t)
 
-if __name__ == '__main__':
-    T = Task ("tarea", Task.TYPE_TASK, "300304")
-    T.addExecution (TaskExecution (20333, 32405, 2))
-    T.addExecution (TaskExecution (18333, 19567, 1))
+    def findTaskByCode (self, code):
+        T = None
+        for T in self._tasks:
+            if T.getCode () == code:
+                break
+        return T
 
-    print T.getSummary (10000, 50000, 1)
+    def readTDFile (self, fileName):
+        fp = open (fileName, "r")
+        self._lastTime = 0
+        currentCore = 0
+        for line in fp:
+            if line.startswith ("CPU"):
+                pos = line.find ("-")
+                currentCore = int (line.strip () [pos+1])
+            elif line.startswith ("NAM"):
+                parts = line.strip ().split (" ")
+                T = Task (parts[3], parts[1], parts[2])
+                if not T in self._tasks:
+                    self._tasks.append (T)
+            elif line.startswith ("STA"):
+                parts = line.strip ().split (" ")
+                stTime = int (parts[3])
+            elif line.startswith ("STO"):
+                parts = line.strip ().split (" ")
+                endTime = int (parts[3])
+                code = int (parts[2])
+                T = self.findTaskByCode (code)
+                E = TaskExecution (stTime, endTime, currentCore)
+                print E
+                T.addExecution (E)
+                if endTime > self._lastTime:
+                    self._lastTime = endTime
+            
+        self._tasks = sorted (self._tasks)
+
+    def getLastTime (self):
+        return self._lastTime
+
+if __name__ == '__main__':
+    T = TaskList ()
+    T.readTDFile (sys.argv[1])
+
+    for t in T._tasks:
+        S = t.getSummary (0, T.getLastTime(), Task.ALL_CORES)
+        print t
+        print S
+    print len (T._tasks)
