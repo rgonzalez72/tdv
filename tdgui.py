@@ -8,6 +8,7 @@ import Task
 class TDGUI (wx.Frame):
     def __init__ (self, parent, id, title, tdiFile):
         wx.Frame.__init__ (self, parent, id, title, size= (800, 600))
+        self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
 
         self.statusbas = self.CreateStatusBar ()
         self.CreateMenuBar ()
@@ -137,6 +138,7 @@ class TaskGrid (sheet.CSheet):
         self.SetNumberRows (self._numRows)
         self.SetNumberCols (self._numCols)
         self.setReverseCols ()
+        self._reverseCols [0] = True
 
         self.EnableEditing (False)
         self.EnableCellEditControl (False)
