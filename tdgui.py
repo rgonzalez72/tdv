@@ -55,6 +55,7 @@ class TDGUI (wx.Frame):
         helpm = wx.Menu ()
 
         Oitem = filem.Append (wx.ID_FILE, "&Open", "Open TD file")
+        Citem = filem.Append (wx.ID_CLOSE, "&Close", "Close curret file")
         Qitem = filem.Append (wx.ID_EXIT, "&Quit", "Quit application")
         menubar.Append (filem, "&File")
         menubar.Append (helpm, "&Help")
@@ -65,6 +66,7 @@ class TDGUI (wx.Frame):
         self.Bind (wx.EVT_MENU, self.OnQuit, Qitem)
         self.Bind (wx.EVT_MENU, self.OnAbout, Aitem)
         self.Bind (wx.EVT_MENU, self.OnOpenFile, Oitem)
+        self.Bind (wx.EVT_MENU, self.OnCloseFile, Citem)
 
     def OnQuit (self, e):
         self.Close ()
@@ -77,17 +79,20 @@ class TDGUI (wx.Frame):
     def OnOpenFile (self, e):
         print "OnOpenFile"
 
+    def OnCloseFile (self, e):
+        print "OnCloseFile"
 
     def OnSelectAll (self, e):
-        print "OnSelectAll"
         self._sheets [self._currentSheet].SelectAll ()
 
     def OnUnselectAll (self, e):
-        print "OnUnselectAll"
         self._sheets [self._currentSheet].UnselectAll ()
 
     def OnShow (self, e):
-        print "OnShow"
+        title = "Showing " + self._sheets [self._currentSheet].getTdiFile ()
+        S = ShowDialog (self, title)
+        S.Centre ()
+        S.Show ()
 
 class AboutDialog (wx.Dialog):
     def __init__ (self, parent, id, title):
@@ -132,6 +137,7 @@ class TaskGrid (sheet.CSheet):
         self._taskList.readTDFile (tdiFile)
         self._taskList.calcPercentage ()
         self._taskList.sortByName ()
+        self._tdiFile = tdiFile
 
         self._numRows = self._taskList.getNumberOfTasks ()
         self._numCols = 5
@@ -236,6 +242,12 @@ class TaskGrid (sheet.CSheet):
         for i in range (self._taskList.getNumberOfTasks ()):
             self.EnableRow (i, False)
 
+    def getTdiFile (self):
+        return self._tdiFile
+
+class ShowDialog (wx.Frame):
+    def __init__(self, parent, title):
+        wx.Frame.__init__ (self, parent, wx.ID_ANY, title)
 
 app = wx.App ()
 TDGUI (None, -1, "Time Doctor GUI", sys.argv[1])
