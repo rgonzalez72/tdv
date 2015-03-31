@@ -81,8 +81,10 @@ class AboutDialog (wx.Dialog):
 class TaskGrid (sheet.CSheet):
     def __init__ (self, parent):
         sheet.CSheet.__init__ (self, parent)
-        self.SetNumberRows (60)
-        self.SetNumberCols (5)
+        self._numRows = 60
+        self._numCols = 5
+        self.SetNumberRows (self._numRows)
+        self.SetNumberCols (self._numCols)
 
         self.SetColLabelValue (0, "Type")
         self.SetColLabelValue (1, "Number")
@@ -96,10 +98,28 @@ class TaskGrid (sheet.CSheet):
         self.SetColSize (3, 200)
         self.SetColSize (4, 60)
 
-        for i in range (60):
-            self.SetCellValue (i, 4, "Yes")
+        self._enabled = []
+        for i in range (self._numRows):
+            self.EnableRow (i, True)
 
         self.Bind (wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelClick)
+
+    def EnableRow (self, row, enable):
+        if len (self._enabled) <= row:
+            self._enabled.append (False)
+
+        if enable:
+            self.SetCellValue (row, 4, "Yes")
+            self._enabled [row] = True
+        else:
+            self.SetCellValue (row, 4, "No")
+            self._enabled [row] = False
+
+        for i in range (self._numCols):
+            if enable:
+                self.SetCellBackgroundColour (row, i, "#80ff80")
+            else:
+                self.SetCellBackgroundColour (row, i, "#ff8080")
             
     def OnLabelClick (self, event):
         row = event.GetRow()
@@ -111,12 +131,9 @@ class TaskGrid (sheet.CSheet):
             pass
         else:
             # toggle row
-            if self.GetCellValue (row, 4) == "Yes":
-                self.SetCellValue (row, 4, "No")
-            else:
-                self.SetCellValue (row, 4, "Yes")
+            self.EnableRow (row, not self._enabled[row])
 
-        event.Skip ()
+#event.Skip ()
 
 app = wx.App ()
 TDGUI (None, -1, "Time Doctor GUI")
