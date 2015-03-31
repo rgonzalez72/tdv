@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import wx
+from wx.lib import sheet
 
 class TDGUI (wx.Frame):
     def __init__ (self, parent, id, title):
@@ -9,7 +10,7 @@ class TDGUI (wx.Frame):
         self.statusbas = self.CreateStatusBar ()
         self.CreateMenuBar ()
 
-        self.graphics = Graphics (self)
+        self.graphics = TaskGrid (self)
         self.graphics.SetFocus ()
         
         
@@ -50,7 +51,6 @@ class AboutDialog (wx.Dialog):
 
         vbox = wx.BoxSizer (wx.VERTICAL)
         hbox0 = wx.BoxSizer (wx.HORIZONTAL)
-        hbox1 = wx.BoxSizer (wx.HORIZONTAL)
         hbox2 = wx.BoxSizer (wx.HORIZONTAL)
         hbox3 = wx.BoxSizer (wx.HORIZONTAL)
 
@@ -78,24 +78,45 @@ class AboutDialog (wx.Dialog):
     def OnClose (self, e):
         self.Close ()
 
-class Graphics (wx.Panel):
+class TaskGrid (sheet.CSheet):
     def __init__ (self, parent):
-        wx.Panel.__init__ (self, parent, wx.HSCROLL | wx.VSCROLL)
+        sheet.CSheet.__init__ (self, parent)
+        self.SetNumberRows (60)
+        self.SetNumberCols (5)
 
-        vbox = wx.BoxSizer (wx.VERTICAL)
+        self.SetColLabelValue (0, "Type")
+        self.SetColLabelValue (1, "Number")
+        self.SetColLabelValue (2, "Percentage")
+        self.SetColLabelValue (3, "Accumulated time")
+        self.SetColLabelValue (4, "Show")
 
-        for i in range (0,15):
-            l = wx.StaticText (self, wx.ID_ANY, "123" + str(i))
-            hbox = wx.BoxSizer (wx.HORIZONTAL)
-            hbox.Add (l, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 10)
-            vbox.Add (hbox, 0, wx.CENTER)
+        self.SetColSize (0, 60)
+        self.SetColSize (1, 80)
+        self.SetColSize (2, 100)
+        self.SetColSize (3, 200)
+        self.SetColSize (4, 60)
 
-        self.SetSizer (vbox)
+        for i in range (60):
+            self.SetCellValue (i, 4, "Yes")
 
-#self.Bind (wx.EVT_PAINT, self.OnPaint)
+        self.Bind (wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelClick)
+            
+    def OnLabelClick (self, event):
+        row = event.GetRow()
+        col = event.GetCol()
 
-    def OnPaint (self, event):
-        dc = wx.PaintDC(self)
+        if row == -1 and col == -1:
+            pass
+        if row == -1:
+            pass
+        else:
+            # toggle row
+            if self.GetCellValue (row, 4) == "Yes":
+                self.SetCellValue (row, 4, "No")
+            else:
+                self.SetCellValue (row, 4, "Yes")
+
+        event.Skip ()
 
 app = wx.App ()
 TDGUI (None, -1, "Time Doctor GUI")
