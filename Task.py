@@ -75,19 +75,25 @@ class Task (object):
         return self._code == other._code
 
     def __bt__ (self, other):
-        return self._name > other._name
+        return self._name.lower () > other._name.lower ()
 
     def __be__ (self, other):
-        return self._name >= other._name
+        return self._name.lower () >= other._name.lower ()
 
     def __lt__ (self, other):
-        return self._name < other._name
+        return self._name.lower () < other._name.lower ()
 
     def __le__ (self, other):
-        return self._name <= other._name
+        return self._name.lower () <= other._name.lower ()
 
     def getCode (self):
         return self._code
+
+    def getName (self):
+        return self._name
+
+    def getTypeName (self):
+        return Task.TYPE_NAMES [self._type]
 
 class TaskList (object):
     def __init__ (self):
@@ -142,6 +148,12 @@ class TaskList (object):
     def sortByExecutionTime (self):
         # TODO
         pass
+
+    def getNumberOfTasks (self):
+        return len (self._tasks)
+
+    def getTask (self, index):
+        return self._tasks[index]
 
 if __name__ == '__main__':
     T = TaskList ()

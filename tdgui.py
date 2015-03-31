@@ -2,15 +2,17 @@
 
 import wx
 from wx.lib import sheet
+import sys
+import Task
 
 class TDGUI (wx.Frame):
-    def __init__ (self, parent, id, title):
+    def __init__ (self, parent, id, title, tdiFile):
         wx.Frame.__init__ (self, parent, id, title, size= (800, 600))
 
         self.statusbas = self.CreateStatusBar ()
         self.CreateMenuBar ()
 
-        self.graphics = TaskGrid (self)
+        self.graphics = TaskGrid (self, tdiFile)
         self.graphics.SetFocus ()
         
         
@@ -79,9 +81,14 @@ class AboutDialog (wx.Dialog):
         self.Close ()
 
 class TaskGrid (sheet.CSheet):
-    def __init__ (self, parent):
+    def __init__ (self, parent, tdiFile):
         sheet.CSheet.__init__ (self, parent)
-        self._numRows = 60
+
+        self._taskList = Task.TaskList ()
+        self._taskList.readTDFile (tdiFile)
+        self._taskList.sortByName ()
+
+        self._numRows = self._taskList.getNumberOfTasks ()
         self._numCols = 5
         self.SetNumberRows (self._numRows)
         self.SetNumberCols (self._numCols)
@@ -92,6 +99,7 @@ class TaskGrid (sheet.CSheet):
         self.SetColLabelValue (3, "Accumulated time")
         self.SetColLabelValue (4, "Show")
 
+        self.SetRowLabelSize (150)
         self.SetColSize (0, 60)
         self.SetColSize (1, 80)
         self.SetColSize (2, 100)
@@ -100,6 +108,16 @@ class TaskGrid (sheet.CSheet):
 
         self._enabled = []
         for i in range (self._numRows):
+            T = self._taskList.getTask (i)
+            self.SetRowLabelAlignment (i, wx.LEFT)
+            self.SetRowLabelValue (i, T.getName ())
+
+            self.SetCellValue (i, 0, T.getTypeName ())
+
+            S = T.getSummary (0, self._taskList.getLastTime (), Task.Task.ALL_CORES)
+            self.SetCellValue (i, 1, str (S['number']))
+            self.SetCellValue (i, 2, str (S['percentage']) + " %")
+            self.SetCellValue (i, 3, str (S['duration']))
             self.EnableRow (i, True)
 
         self.Bind (wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelClick)
@@ -117,9 +135,9 @@ class TaskGrid (sheet.CSheet):
 
         for i in range (self._numCols):
             if enable:
-                self.SetCellBackgroundColour (row, i, "#80ff80")
+                self.SetCellBackgroundColour (row, i, "#C0ffC0")
             else:
-                self.SetCellBackgroundColour (row, i, "#ff8080")
+                self.SetCellBackgroundColour (row, i, "#ffC0C0")
             
     def OnLabelClick (self, event):
         row = event.GetRow()
@@ -136,5 +154,5 @@ class TaskGrid (sheet.CSheet):
 #event.Skip ()
 
 app = wx.App ()
-TDGUI (None, -1, "Time Doctor GUI")
+TDGUI (None, -1, "Time Doctor GUI", sys.argv[1])
 app.MainLoop ()
