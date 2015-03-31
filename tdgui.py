@@ -12,9 +12,31 @@ class TDGUI (wx.Frame):
         self.statusbas = self.CreateStatusBar ()
         self.CreateMenuBar ()
 
-        self.graphics = TaskGrid (self, tdiFile)
-        self.graphics.SetFocus ()
+        vbox = wx.BoxSizer (wx.VERTICAL)
+        hbox0 = wx.BoxSizer (wx.HORIZONTAL)
+        hbox1 = wx.BoxSizer (wx.HORIZONTAL)
+
+        self.notebook = wx.Notebook (self, wx.ID_ANY, style= wx.RIGHT)
+
+        self.sheet1 = TaskGrid (self.notebook, tdiFile)
+        self.sheet1.SetFocus ()
+
+        self.notebook.AddPage (self.sheet1, "File 1")
         
+
+        self.btnSelAll = wx.Button (self, wx.ID_ANY, "&Select All")
+        self.btnUnselAll = wx.Button (self, wx.ID_CLOSE, "&Unselect All")
+        self.btnShow = wx.Button (self, wx.ID_CLOSE, "&Show")
+
+        vbox.Add (self.notebook, 1, wx.EXPAND)
+
+        hbox1.Add (self.btnSelAll, 0, wx.CENTER | wx.RIGHT, 20)
+        hbox1.Add (self.btnUnselAll, 0, wx.CENTER, 20)
+        hbox1.Add (self.btnShow, 0, wx.CENTER | wx.LEFT, 20)
+        
+        vbox.Add ((5,5) , 0)
+        vbox.Add (hbox1, 0, wx.CENTER)
+        self.SetSizer(vbox)
         
         self.Centre ()
         self.Show (True)
@@ -53,6 +75,7 @@ class AboutDialog (wx.Dialog):
 
         vbox = wx.BoxSizer (wx.VERTICAL)
         hbox0 = wx.BoxSizer (wx.HORIZONTAL)
+        hbox1 = wx.BoxSizer (wx.HORIZONTAL)
         hbox2 = wx.BoxSizer (wx.HORIZONTAL)
         hbox3 = wx.BoxSizer (wx.HORIZONTAL)
 
@@ -60,7 +83,7 @@ class AboutDialog (wx.Dialog):
 
         label1 = wx.StaticText (panel, wx.ID_ANY, 
                 "An application for visualizing time doctor files.")
-        hbox1.Add (label1, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
+        hbox0.Add (label1, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
 
         self.btnClose = wx.Button (panel, wx.ID_CLOSE, "&Close")
         hbox3.Add (self.btnClose, 0, wx.CENTER, 20)
@@ -86,12 +109,17 @@ class TaskGrid (sheet.CSheet):
 
         self._taskList = Task.TaskList ()
         self._taskList.readTDFile (tdiFile)
+        self._taskList.calcPercentage ()
         self._taskList.sortByName ()
 
         self._numRows = self._taskList.getNumberOfTasks ()
         self._numCols = 5
         self.SetNumberRows (self._numRows)
         self.SetNumberCols (self._numCols)
+        self.setReverseCols ()
+
+        self.EnableEditing (False)
+        self.EnableCellEditControl (False)
 
         self.SetColLabelValue (0, "Type")
         self.SetColLabelValue (1, "Number")
@@ -102,11 +130,15 @@ class TaskGrid (sheet.CSheet):
         self.SetRowLabelSize (150)
         self.SetColSize (0, 60)
         self.SetColSize (1, 80)
-        self.SetColSize (2, 100)
-        self.SetColSize (3, 200)
+        self.SetColSize (2, 150)
+        self.SetColSize (3, 150)
         self.SetColSize (4, 60)
 
         self._enabled = []
+        self.redraw ()
+        self.Bind (wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelClick)
+
+    def redraw (self):
         for i in range (self._numRows):
             T = self._taskList.getTask (i)
             self.SetRowLabelAlignment (i, wx.LEFT)
@@ -114,13 +146,11 @@ class TaskGrid (sheet.CSheet):
 
             self.SetCellValue (i, 0, T.getTypeName ())
 
-            S = T.getSummary (0, self._taskList.getLastTime (), Task.Task.ALL_CORES)
-            self.SetCellValue (i, 1, str (S['number']))
-            self.SetCellValue (i, 2, str (S['percentage']) + " %")
-            self.SetCellValue (i, 3, str (S['duration']))
+            self.SetCellValue (i, 1, str (T.getNumber ()))
+            self.SetCellValue (i, 2, str (T.getPercentage ()) + " %")
+            self.SetCellValue (i, 3, str (T.getDuration ()))
             self.EnableRow (i, True)
 
-        self.Bind (wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelClick)
 
     def EnableRow (self, row, enable):
         if len (self._enabled) <= row:
@@ -139,14 +169,36 @@ class TaskGrid (sheet.CSheet):
             else:
                 self.SetCellBackgroundColour (row, i, "#ffC0C0")
             
+    def setReverseCols (self):
+        for i in range (self._numCols):
+            self._reverseCols= [False, False, False, False, False]
+
     def OnLabelClick (self, event):
         row = event.GetRow()
         col = event.GetCol()
 
-        if row == -1 and col == -1:
-            pass
         if row == -1:
-            pass
+            if col == -1:
+                oldValue = self._reverseCols [0]
+                self._taskList.sortByName (self._reverseCols[0])
+                self.setReverseCols ()
+                self._reverseCols [0] = not oldValue
+            elif col == 0:
+                oldValue = self._reverseCols [1]
+                self._taskList.sortByType (self._reverseCols[1])
+                self.setReverseCols ()
+                self._reverseCols [1] = not oldValue
+            elif col == 1:
+                oldValue = self._reverseCols [3]
+                self._taskList.sortByNumber (self._reverseCols[3])
+                self.setReverseCols ()
+                self._reverseCols [3] = not oldValue
+            elif col == 2 or col == 3:
+                oldValue = self._reverseCols [2]
+                self._taskList.sortByExecutionTime (self._reverseCols[2])
+                self.setReverseCols ()
+                self._reverseCols [2] = not oldValue
+            self.redraw ()
         else:
             # toggle row
             self.EnableRow (row, not self._enabled[row])

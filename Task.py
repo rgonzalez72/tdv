@@ -45,6 +45,9 @@ class Task (object):
         self._type = taskType
         self._code = code
         self._executions = []
+        self._number = 0
+        self._total = 0
+        self._percentage = 0.0
 
     def __str__ (self):
         return self._name + "(" + self._code + ") " + \
@@ -52,6 +55,21 @@ class Task (object):
 
     def addExecution (self, e):
         self._executions.append (e)
+        self._number += 1
+        self._total += e.getDuration ()
+
+    def calcPercentage (self, beginTime, endTime):
+        self._percentage =  float (self._total) * 100.0 /\
+                        float (endTime - beginTime)
+
+    def getNumber (self):
+        return self._number
+
+    def getDuration (self):
+        return self._total
+
+    def getPercentage (self):
+        return self._percentage
 
     def getSummary (self, beginTime, endTime, core):
         """ This function returns the summary of the executions:
@@ -141,13 +159,24 @@ class TaskList (object):
     def getLastTime (self):
         return self._lastTime
 
+    def calcPercentage (self):
+        for T in self._tasks:
+            T.calcPercentage (0, self._lastTime)
 
-    def sortByName (self):
-        self._tasks = sorted (self._tasks)
+    def sortByName (self, reverse=False):
+        self._tasks = sorted (self._tasks, reverse = reverse)
 
-    def sortByExecutionTime (self):
-        # TODO
-        pass
+    def sortByType (self, reverse=False):
+        self._tasks =sorted (self._tasks, key=lambda k: k.getTypeName (),
+                reverse = reverse)
+
+    def sortByNumber (self, reverse=False):
+        self._tasks =sorted (self._tasks, key=lambda k: k.getNumber (),
+                reverse = reverse)
+
+    def sortByExecutionTime (self, reverse=False):
+        self._tasks =sorted (self._tasks, key=lambda k: k.getDuration (),
+                reverse = reverse)
 
     def getNumberOfTasks (self):
         return len (self._tasks)
