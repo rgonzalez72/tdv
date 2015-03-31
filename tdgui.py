@@ -18,15 +18,18 @@ class TDGUI (wx.Frame):
 
         self.notebook = wx.Notebook (self, wx.ID_ANY, style= wx.RIGHT)
 
-        self.sheet1 = TaskGrid (self.notebook, tdiFile)
-        self.sheet1.SetFocus ()
+        sheet1 = TaskGrid (self.notebook, tdiFile)
+        sheet1.SetFocus ()
+        self._sheets = []
+        self._sheets.append (sheet1)
+        self._currentSheet = 0
 
-        self.notebook.AddPage (self.sheet1, "File 1")
+        self.notebook.AddPage (sheet1, tdiFile)
         
 
         self.btnSelAll = wx.Button (self, wx.ID_ANY, "&Select All")
-        self.btnUnselAll = wx.Button (self, wx.ID_CLOSE, "&Unselect All")
-        self.btnShow = wx.Button (self, wx.ID_CLOSE, "&Show")
+        self.btnUnselAll = wx.Button (self, wx.ID_ANY, "&Unselect All")
+        self.btnShow = wx.Button (self, wx.ID_ANY, "&Show")
 
         vbox.Add (self.notebook, 1, wx.EXPAND)
 
@@ -37,6 +40,10 @@ class TDGUI (wx.Frame):
         vbox.Add ((5,5) , 0)
         vbox.Add (hbox1, 0, wx.CENTER)
         self.SetSizer(vbox)
+
+        self.Bind (wx.EVT_BUTTON, self.OnSelectAll, self.btnSelAll)
+        self.Bind (wx.EVT_BUTTON, self.OnUnselectAll, self.btnUnselAll)
+        self.Bind (wx.EVT_BUTTON, self.OnShow, self.btnShow)
         
         self.Centre ()
         self.Show (True)
@@ -69,6 +76,18 @@ class TDGUI (wx.Frame):
     def OnOpenFile (self, e):
         print "OnOpenFile"
 
+
+    def OnSelectAll (self, e):
+        print "OnSelectAll"
+        self._sheets [self._currentSheet].SelectAll ()
+
+    def OnUnselectAll (self, e):
+        print "OnUnselectAll"
+        self._sheets [self._currentSheet].UnselectAll ()
+
+    def OnShow (self, e):
+        print "OnShow"
+
 class AboutDialog (wx.Dialog):
     def __init__ (self, parent, id, title):
         wx.Dialog.__init__ (self, parent, id, title)
@@ -99,6 +118,7 @@ class AboutDialog (wx.Dialog):
         height = minSize.GetHeight ()
         minSize.SetHeight (height + 60)
         self.SetSize (minSize )
+
 
     def OnClose (self, e):
         self.Close ()
@@ -134,7 +154,6 @@ class TaskGrid (sheet.CSheet):
         self.SetColSize (3, 150)
         self.SetColSize (4, 60)
 
-        self._enabled = []
         self.redraw ()
         self.Bind (wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelClick)
 
@@ -149,25 +168,26 @@ class TaskGrid (sheet.CSheet):
             self.SetCellValue (i, 1, str (T.getNumber ()))
             self.SetCellValue (i, 2, str (T.getPercentage ()) + " %")
             self.SetCellValue (i, 3, str (T.getDuration ()))
-            self.EnableRow (i, True)
+            self.drawRow (i)
 
-
-    def EnableRow (self, row, enable):
-        if len (self._enabled) <= row:
-            self._enabled.append (False)
-
-        if enable:
+    def drawRow (self, row):
+        T = self._taskList.getTask (row)
+        if T.getSelected ():
             self.SetCellValue (row, 4, "Yes")
-            self._enabled [row] = True
         else:
             self.SetCellValue (row, 4, "No")
-            self._enabled [row] = False
 
         for i in range (self._numCols):
-            if enable:
+            if T.getSelected ():
                 self.SetCellBackgroundColour (row, i, "#C0ffC0")
             else:
                 self.SetCellBackgroundColour (row, i, "#ffC0C0")
+
+    def EnableRow (self, row, enable):
+        T = self._taskList.getTask (row)
+        T.setSelected (enable)
+
+        self.drawRow (row)
             
     def setReverseCols (self):
         for i in range (self._numCols):
@@ -201,9 +221,19 @@ class TaskGrid (sheet.CSheet):
             self.redraw ()
         else:
             # toggle row
-            self.EnableRow (row, not self._enabled[row])
+            T = self._taskList.getTask (row)
+            self.EnableRow (row, not T.getSelected ())
 
-#event.Skip ()
+    def SelectAll (self):
+        for i in range (self._taskList.getNumberOfTasks ()):
+            self.EnableRow (i, True)
+
+
+    def UnselectAll (self):
+        print "UnselectAll"
+        for i in range (self._taskList.getNumberOfTasks ()):
+            self.EnableRow (i, False)
+
 
 app = wx.App ()
 TDGUI (None, -1, "Time Doctor GUI", sys.argv[1])

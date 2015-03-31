@@ -48,6 +48,7 @@ class Task (object):
         self._number = 0
         self._total = 0
         self._percentage = 0.0
+        self._selected = True
 
     def __str__ (self):
         return self._name + "(" + self._code + ") " + \
@@ -112,6 +113,12 @@ class Task (object):
 
     def getTypeName (self):
         return Task.TYPE_NAMES [self._type]
+
+    def getSelected (self):
+        return self._selected
+
+    def setSelected (self, selected):
+        self._selected = selected
 
 class TaskList (object):
     def __init__ (self):
