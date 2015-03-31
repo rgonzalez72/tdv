@@ -24,6 +24,9 @@ class TaskExecution (object):
         return "core-" + str(self._core) + " " + str(self._timeIn) + ":" + \
             str(self._timeOut)
 
+    def clone (self):
+        return Task (self._timeIn, self._timeOut, self._core)
+
 class Task (object):
 
     ALL_CORES = -1
@@ -49,6 +52,16 @@ class Task (object):
         self._total = 0
         self._percentage = 0.0
         self._selected = True
+
+    def clone (self):
+        T = Task (self._name, self._type, self._code)
+        T._number = self._number
+        T._total = self._total
+        T._percentage = self._percentage
+        T._selected = self._selected
+        for e in self._executions:
+            T.addExecution (e.clone ())
+        return T
 
     def __str__ (self):
         return self._name + "(" + self._code + ") " + \
@@ -125,6 +138,13 @@ class TaskList (object):
         self._tasks =[]
         self._lastTime = 0
 
+    def clone (self):
+        TL = TaskList ()
+        TL._lastTime = self._lastTime
+        for t in self._tasks:
+            TL._tasks.append (t.clone ())
+        return TL
+
     def addTask (self, t): 
         self._tasks.append (t)
 
@@ -190,6 +210,13 @@ class TaskList (object):
 
     def getTask (self, index):
         return self._tasks[index]
+
+    def getNumEnabled (self):
+        enabled = 0
+        for t in self._tasks:
+            if t.getSelected ():
+                enabled += 1
+        return enabled
 
 if __name__ == '__main__':
     T = TaskList ()

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import wx
+import os
 from wx.lib import sheet
 import sys
 import Task
@@ -77,7 +78,13 @@ class TDGUI (wx.Frame):
         A.ShowModal ()
 
     def OnOpenFile (self, e):
-        print "OnOpenFile"
+        diag = wx.FileDialog (self, "Select a time doctor file to open", 
+                os.getcwd(), "", "Time doctor files (*.tdi)|*.tdi|" +
+                "All files|*.*", wx.OPEN)
+
+        if diag.ShowModal () == wx.ID_OK:
+            print diag.GetFilename ()
+            print diag.GetDirectory ()
 
     def OnCloseFile (self, e):
         print "OnCloseFile"
@@ -90,7 +97,7 @@ class TDGUI (wx.Frame):
 
     def OnShow (self, e):
         title = "Showing " + self._sheets [self._currentSheet].getTdiFile ()
-        S = ShowDialog (self, title)
+        S = ShowFrame (self, title, self._sheets[self._currentSheet].getClonedList ())
         S.Centre ()
         S.Show ()
 
@@ -245,10 +252,15 @@ class TaskGrid (sheet.CSheet):
     def getTdiFile (self):
         return self._tdiFile
 
-class ShowDialog (wx.Frame):
-    def __init__(self, parent, title):
+    def getClonedList (self):
+        return self._taskList.clone ()
+
+class ShowFrame (wx.Frame):
+    def __init__(self, parent, title, taskList):
         wx.Frame.__init__ (self, parent, wx.ID_ANY, title)
         self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
+        self._taskList = taskList
+        print self._taskList.getNumEnabled ()
 
 app = wx.App ()
 TDGUI (None, -1, "Time Doctor GUI", sys.argv[1])
