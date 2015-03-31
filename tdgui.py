@@ -7,7 +7,7 @@ import sys
 import Task
 
 class TDGUI (wx.Frame):
-    def __init__ (self, parent, id, title, tdiFile):
+    def __init__ (self, parent, id, title):
         wx.Frame.__init__ (self, parent, id, title, size= (800, 600))
         self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
 
@@ -20,13 +20,13 @@ class TDGUI (wx.Frame):
 
         self.notebook = wx.Notebook (self, wx.ID_ANY, style= wx.RIGHT)
 
-        sheet1 = TaskGrid (self.notebook, tdiFile)
-        sheet1.SetFocus ()
+#sheet1 = TaskGrid (self.notebook, tdiFile)
+#        sheet1.SetFocus ()
         self._sheets = []
-        self._sheets.append (sheet1)
+#        self._sheets.append (sheet1)
         self._currentSheet = 0
 
-        self.notebook.AddPage (sheet1, tdiFile)
+#        self.notebook.AddPage (sheet1, tdiFile)
         
 
         self.btnSelAll = wx.Button (self, wx.ID_ANY, "&Select All")
@@ -46,6 +46,8 @@ class TDGUI (wx.Frame):
         self.Bind (wx.EVT_BUTTON, self.OnSelectAll, self.btnSelAll)
         self.Bind (wx.EVT_BUTTON, self.OnUnselectAll, self.btnUnselAll)
         self.Bind (wx.EVT_BUTTON, self.OnShow, self.btnShow)
+        self.Bind (wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnChange, self.notebook)
+
         
         self.Centre ()
         self.Show (True)
@@ -83,11 +85,24 @@ class TDGUI (wx.Frame):
                 "All files|*.*", wx.OPEN)
 
         if diag.ShowModal () == wx.ID_OK:
-            print diag.GetFilename ()
-            print diag.GetDirectory ()
+            tdiFileName =  diag.GetFilename ()
+            fullPath = os.path.join (diag.GetDirectory(), tdiFileName)
+            sheet = TaskGrid (self.notebook, fullPath)
+            sheet.SetFocus ()
+            self._sheets.append (sheet)
+            self.notebook.AddPage (sheet, tdiFileName)
+            self.notebook.SetSelection (len(self._sheets) - 1)
 
     def OnCloseFile (self, e):
-        print "OnCloseFile"
+        sel = self.notebook.GetSelection ()
+        newSheets = []
+        if sel > 0:
+            newSheets = self._sheets [:sel]
+        elif sel < len (self._sheets) -1:
+            newSheets = self._sheets [sel+1:]
+        self._sheets = newSheets
+        self.notebook.RemovePage (sel)
+
 
     def OnSelectAll (self, e):
         self._sheets [self._currentSheet].SelectAll ()
@@ -100,6 +115,9 @@ class TDGUI (wx.Frame):
         S = ShowFrame (self, title, self._sheets[self._currentSheet].getClonedList ())
         S.Centre ()
         S.Show ()
+
+    def OnChange (self, e):
+        self._currentSheet = e.GetSelection ()
 
 class AboutDialog (wx.Dialog):
     def __init__ (self, parent, id, title):
@@ -245,7 +263,6 @@ class TaskGrid (sheet.CSheet):
 
 
     def UnselectAll (self):
-        print "UnselectAll"
         for i in range (self._taskList.getNumberOfTasks ()):
             self.EnableRow (i, False)
 
@@ -260,8 +277,7 @@ class ShowFrame (wx.Frame):
         wx.Frame.__init__ (self, parent, wx.ID_ANY, title)
         self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
         self._taskList = taskList
-        print self._taskList.getNumEnabled ()
 
 app = wx.App ()
-TDGUI (None, -1, "Time Doctor GUI", sys.argv[1])
+TDGUI (None, -1, "Time Doctor GUI")
 app.MainLoop ()
