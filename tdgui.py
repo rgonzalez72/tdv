@@ -248,6 +248,7 @@ class TaskGrid (sheet.CSheet):
 class ShowDialog (wx.Frame):
     def __init__(self, parent, title):
         wx.Frame.__init__ (self, parent, wx.ID_ANY, title)
+        self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
 
 app = wx.App ()
 TDGUI (None, -1, "Time Doctor GUI", sys.argv[1])
