@@ -12,7 +12,7 @@ class TDGUI (wx.Frame):
         wx.Frame.__init__ (self, parent, id, title, size= (800, 600))
         self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
 
-        self.statusbas = self.CreateStatusBar ()
+        self.statusbar = self.CreateStatusBar ()
         self.CreateMenuBar ()
 
         vbox = wx.BoxSizer (wx.VERTICAL)
@@ -95,7 +95,7 @@ class TDGUI (wx.Frame):
             self.dlg.Update (80)
             sheet = TaskGrid (self.notebook, tdiFileName, taskList)
             sheet.SetFocus ()
-            self.dlg.Update (80)
+            self.dlg.Update (90)
             self.dlg.Destroy ()
             self._sheets.append (sheet)
             self.notebook.AddPage (sheet, tdiFileName)
@@ -126,6 +126,11 @@ class TDGUI (wx.Frame):
 
     def OnChange (self, e):
         self._currentSheet = e.GetSelection ()
+        S = self._sheets [ self._currentSheet].getList ()
+        statusText = "Total time: " + str(S.getLastTime ()) + \
+            ", Number of cores: " + str(S.getNumberOfCores ()) + \
+            ", Number of threads: " + str (S.getNumberOfTasks ())
+        self.statusbar.SetStatusText (statusText)
 
 class AboutDialog (wx.Dialog):
     def __init__ (self, parent, id, title):
@@ -167,9 +172,6 @@ class TaskGrid (sheet.CSheet):
         sheet.CSheet.__init__ (self, parent)
 
         self._taskList = taskList
-        self._taskList.readTDFile (tdiFile)
-        self._taskList.calcPercentage ()
-        self._taskList.sortByName ()
         self._tdiFile = tdiFile
 
         self._numRows = self._taskList.getNumberOfTasks ()
@@ -279,6 +281,9 @@ class TaskGrid (sheet.CSheet):
 
     def getClonedList (self):
         return self._taskList.clone ()
+
+    def getList (self):
+        return self._taskList
 
 class GraphicPanel (scrolled.ScrolledPanel):
     def __init__ (self, parent):

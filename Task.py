@@ -137,10 +137,12 @@ class TaskList (object):
     def __init__ (self):
         self._tasks =[]
         self._lastTime = 0
+        self._numCores = 0
 
     def clone (self):
         TL = TaskList ()
         TL._lastTime = self._lastTime
+        TL._numCores = self._numCores
         for t in self._tasks:
             TL._tasks.append (t.clone ())
         return TL
@@ -164,6 +166,7 @@ class TaskList (object):
             if line.startswith ("CPU"):
                 pos = line.find ("-")
                 currentCore = int (line.strip () [pos+1])
+                self._numCores += 1
             elif line.startswith ("NAM"):
                 parts = line.strip ().split (" ")
                 T = Task (parts[3], parts[1], parts[2])
@@ -217,6 +220,9 @@ class TaskList (object):
             if t.getSelected ():
                 enabled += 1
         return enabled
+
+    def getNumberOfCores (self):
+        return self._numCores
 
 if __name__ == '__main__':
     T = TaskList ()
