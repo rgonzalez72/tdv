@@ -277,17 +277,20 @@ class TaskGrid (sheet.CSheet):
 
 class GraphicPanel (scrolled.ScrolledPanel):
     def __init__ (self, parent):
-        scrolled.ScrolledPanel.__init__ (self, parent, wx.ID_ANY, size=(400,300))
-        numLines = 10
+        scrolled.ScrolledPanel.__init__ (self, parent = parent, id= wx.ID_ANY, pos = (10,10), size = (400, 300), style = wx.TAB_TRAVERSAL|wx.SUNKEN_BORDER)
+        numLines = 30
 
-        boxer  = wx.GridSizer (numLines,2)
+        InsidePanel = wx.Panel(self)
 
         for i in range (numLines):
-            boxer.Add (wx.StaticText( self, wx.ID_ANY, "Uno"))
-            boxer.Add (wx.StaticText( self, wx.ID_ANY, "Dos"))
+            wx.StaticText( InsidePanel, wx.ID_ANY, "Uno", pos = (10, 10 + (i * 15)))
+            wx.StaticText( InsidePanel, wx.ID_ANY, "Dos", pos = (500, 10 + (i * 15)))
 
-        self.SetSizer (boxer)
-        self.SetAutoLayout(1)
+
+        PanelSizer = wx.BoxSizer ()
+        PanelSizer.Add(InsidePanel, proportion=1)
+        self.SetSizer (PanelSizer)
+        
         self.SetupScrolling(scroll_x=True, scroll_y=True)
 
 class ShowFrame (wx.Frame):
@@ -314,7 +317,7 @@ class ShowFrame (wx.Frame):
         self.Bind (wx.EVT_SLIDER, self.OnSlide, slider)
         self.Bind (wx.EVT_CHECKBOX, self.OnToggle, cb)
 
-        panel = wx.PyPanel (self, wx.ID_ANY)
+        panel = wx.Panel (self, wx.ID_ANY)
         gp = GraphicPanel (panel)
 #hbox1.Add (panel, 0, wx.CENTER | wx.ALL, 10)
 
