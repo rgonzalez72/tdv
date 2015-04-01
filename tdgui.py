@@ -284,13 +284,19 @@ class ShowFrame (wx.Frame):
         hbox1 = wx.BoxSizer (wx.HORIZONTAL)
         hbox2 = wx.BoxSizer (wx.HORIZONTAL)
 
+        cb = wx.CheckBox (self, wx.ID_ANY, "&Separate Cores")         
+        hbox0.Add (cb, 0,  wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+
+        slider = wx.Slider (self,value = 100, minValue = 1, maxValue=200) 
+        hbox0.Add (slider, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+
         self.btnClose = wx.Button (self, wx.ID_CLOSE, "&Close")
         hbox2.Add (self.btnClose, 0, wx.CENTER, 20)
         self.Bind (wx.EVT_BUTTON, self.OnClose, self.btnClose)
 
         vbox.Add (hbox0, 0, wx.CENTER)
         vbox.Add ((5,5) , 0)
-        vbox.Add (hbox1, 0, wx.CENTER)
+        vbox.Add (hbox1, 0, wx.EXPAND)
         vbox.Add ((5,5) , 0)
         vbox.Add (hbox2, 0, wx.CENTER)
         self.SetSizer(vbox)
