@@ -20,14 +20,8 @@ class TDGUI (wx.Frame):
 
         self.notebook = wx.Notebook (self, wx.ID_ANY, style= wx.RIGHT)
 
-#sheet1 = TaskGrid (self.notebook, tdiFile)
-#        sheet1.SetFocus ()
         self._sheets = []
-#        self._sheets.append (sheet1)
         self._currentSheet = 0
-
-#        self.notebook.AddPage (sheet1, tdiFile)
-        
 
         self.btnSelAll = wx.Button (self, wx.ID_ANY, "&Select All")
         self.btnUnselAll = wx.Button (self, wx.ID_ANY, "&Unselect All")
@@ -85,9 +79,17 @@ class TDGUI (wx.Frame):
                 "All files|*.*", wx.OPEN)
 
         if diag.ShowModal () == wx.ID_OK:
+#M = wx.MessageDialog (self, "Loading TD file. Please wait", style =wx.ID_OK)
+#M.Center ()
+#M.Show ()
             tdiFileName =  diag.GetFilename ()
             fullPath = os.path.join (diag.GetDirectory(), tdiFileName)
-            sheet = TaskGrid (self.notebook, fullPath)
+            taskList = Task.TaskList ()
+            taskList.readTDFile (fullPath)
+            taskList.calcPercentage ()
+            taskList.sortByName ()
+#M.Close ()
+            sheet = TaskGrid (self.notebook, tdiFileName, taskList)
             sheet.SetFocus ()
             self._sheets.append (sheet)
             self.notebook.AddPage (sheet, tdiFileName)
@@ -155,10 +157,10 @@ class AboutDialog (wx.Dialog):
         self.Close ()
 
 class TaskGrid (sheet.CSheet):
-    def __init__ (self, parent, tdiFile):
+    def __init__ (self, parent, tdiFile, taskList):
         sheet.CSheet.__init__ (self, parent)
 
-        self._taskList = Task.TaskList ()
+        self._taskList = taskList
         self._taskList.readTDFile (tdiFile)
         self._taskList.calcPercentage ()
         self._taskList.sortByName ()
@@ -277,6 +279,24 @@ class ShowFrame (wx.Frame):
         wx.Frame.__init__ (self, parent, wx.ID_ANY, title)
         self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
         self._taskList = taskList
+        vbox = wx.BoxSizer (wx.VERTICAL)
+        hbox0 = wx.BoxSizer (wx.HORIZONTAL)
+        hbox1 = wx.BoxSizer (wx.HORIZONTAL)
+        hbox2 = wx.BoxSizer (wx.HORIZONTAL)
+
+        self.btnClose = wx.Button (self, wx.ID_CLOSE, "&Close")
+        hbox2.Add (self.btnClose, 0, wx.CENTER, 20)
+        self.Bind (wx.EVT_BUTTON, self.OnClose, self.btnClose)
+
+        vbox.Add (hbox0, 0, wx.CENTER)
+        vbox.Add ((5,5) , 0)
+        vbox.Add (hbox1, 0, wx.CENTER)
+        vbox.Add ((5,5) , 0)
+        vbox.Add (hbox2, 0, wx.CENTER)
+        self.SetSizer(vbox)
+
+    def OnClose (self, e):
+        self.Close ()
 
 app = wx.App ()
 TDGUI (None, -1, "Time Doctor GUI")
