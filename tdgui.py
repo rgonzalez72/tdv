@@ -275,6 +275,21 @@ class TaskGrid (sheet.CSheet):
     def getClonedList (self):
         return self._taskList.clone ()
 
+class GraphicPanel (scrolled.ScrolledPanel):
+    def __init__ (self, parent):
+        scrolled.ScrolledPanel.__init__ (self, parent, wx.ID_ANY, size=(400,300))
+        numLines = 10
+
+        boxer  = wx.GridSizer (numLines,2)
+
+        for i in range (numLines):
+            boxer.Add (wx.StaticText( self, wx.ID_ANY, "Uno"))
+            boxer.Add (wx.StaticText( self, wx.ID_ANY, "Dos"))
+
+        self.SetSizer (boxer)
+        self.SetAutoLayout(1)
+        self.SetupScrolling(scroll_x=True, scroll_y=True)
+
 class ShowFrame (wx.Frame):
     def __init__(self, parent, title, taskList):
         wx.Frame.__init__ (self, parent, wx.ID_ANY, title)
@@ -282,7 +297,7 @@ class ShowFrame (wx.Frame):
         self._taskList = taskList
         vbox = wx.BoxSizer (wx.VERTICAL)
         hbox0 = wx.BoxSizer (wx.HORIZONTAL)
-        hbox1 = wx.BoxSizer (wx.HORIZONTAL)
+#        hbox1 = wx.BoxSizer (wx.HORIZONTAL)
         hbox2 = wx.BoxSizer (wx.HORIZONTAL)
 
         cb = wx.CheckBox (self, wx.ID_ANY, "&Separate Cores")         
@@ -299,9 +314,9 @@ class ShowFrame (wx.Frame):
         self.Bind (wx.EVT_SLIDER, self.OnSlide, slider)
         self.Bind (wx.EVT_CHECKBOX, self.OnToggle, cb)
 
-        panel = scrolled.ScrolledPanel (self, wx.ID_ANY)
-
-        hbox1.Add (panel, 0, wx.CENTER)
+        panel = wx.PyPanel (self, wx.ID_ANY)
+        gp = GraphicPanel (panel)
+#hbox1.Add (panel, 0, wx.CENTER | wx.ALL, 10)
 
         self.btnClose = wx.Button (self, wx.ID_CLOSE, "&Close")
         hbox2.Add (self.btnClose, 0, wx.CENTER, 20)
@@ -309,7 +324,7 @@ class ShowFrame (wx.Frame):
 
         vbox.Add (hbox0, 0, wx.CENTER)
         vbox.Add ((5,5) , 0)
-        vbox.Add (hbox1, 0, wx.EXPAND)
+        vbox.Add (panel, 1, wx.EXPAND)
         vbox.Add ((5,5) , 0)
         vbox.Add (hbox2, 0, wx.CENTER)
         self.SetSizer(vbox)
