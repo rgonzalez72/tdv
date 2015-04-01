@@ -93,13 +93,11 @@ class TDGUI (wx.Frame):
             self.dlg.Update (60)
             taskList.sortByName ()
             self.dlg.Update (80)
+            self.dlg.Destroy ()
             sheet = TaskGrid (self.notebook, tdiFileName, taskList)
             sheet.SetFocus ()
-            self.dlg.Update (90)
-            self.dlg.Destroy ()
             self._sheets.append (sheet)
-            self.notebook.AddPage (sheet, tdiFileName)
-            self.notebook.SetSelection (len(self._sheets) - 1)
+            self.notebook.AddPage (sheet, tdiFileName, True)
 
     def OnCloseFile (self, e):
         sel = self.notebook.GetSelection ()
@@ -197,8 +195,8 @@ class TaskGrid (sheet.CSheet):
         self.SetColSize (3, 150)
         self.SetColSize (4, 60)
 
-        self.redraw ()
         self.Bind (wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelClick)
+        self.redraw ()
 
     def redraw (self):
         for i in range (self._numRows):
@@ -285,16 +283,28 @@ class TaskGrid (sheet.CSheet):
     def getList (self):
         return self._taskList
 
+class OneGraphPanel (wx.Panel):
+    def __init__ (self, parent, pos, size, task, core):
+        wx.Panel.__init__ (self, parent, wx.ID_ANY, pos=pos, size=size)
+        self._task = task
+        self._core = core
+
+
 class GraphicPanel (scrolled.ScrolledPanel):
-    def __init__ (self, parent):
+    def __init__ (self, parent, taskList):
+        total = 0
         scrolled.ScrolledPanel.__init__ (self, parent = parent, id= wx.ID_ANY, pos = (10,10), size = (400, 300), style = wx.TAB_TRAVERSAL|wx.SUNKEN_BORDER)
-        numLines = 30
 
         InsidePanel = wx.Panel(self)
 
-        for i in range (numLines):
-            wx.StaticText( InsidePanel, wx.ID_ANY, "Uno", pos = (10, 10 + (i * 15)))
-            wx.StaticText( InsidePanel, wx.ID_ANY, "Dos", pos = (500, 10 + (i * 15)))
+        for i in range (taskList.getNumberOfTasks ()):
+            T = taskList.getTask (i)
+            if T.getSelected ():
+                wx.StaticText( InsidePanel, wx.ID_ANY, T.getName(), 
+                        pos = (10, 10 + (total * 15)))
+                OneGraphPanel ( InsidePanel, (200, 10 + (total * 15)),
+                        (800, 15), T, Task.Task.ALL_CORES)
+                total += 1
 
 
         PanelSizer = wx.BoxSizer ()
@@ -328,7 +338,7 @@ class ShowFrame (wx.Frame):
         self.Bind (wx.EVT_CHECKBOX, self.OnToggle, cb)
 
         panel = wx.Panel (self, wx.ID_ANY)
-        gp = GraphicPanel (panel)
+        gp = GraphicPanel (panel, taskList)
 #hbox1.Add (panel, 0, wx.CENTER | wx.ALL, 10)
 
         self.btnClose = wx.Button (self, wx.ID_CLOSE, "&Close")
