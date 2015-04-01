@@ -3,6 +3,7 @@
 import wx
 import os
 from wx.lib import sheet
+import wx.lib.scrolledpanel as scrolled
 import sys
 import Task
 
@@ -285,10 +286,22 @@ class ShowFrame (wx.Frame):
         hbox2 = wx.BoxSizer (wx.HORIZONTAL)
 
         cb = wx.CheckBox (self, wx.ID_ANY, "&Separate Cores")         
-        hbox0.Add (cb, 0,  wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        hbox0.Add (cb, 0,  flag = wx.ALL | wx.ALIGN_LEFT, border = 10)
+        hbox0.Add ((5,5) , 0, flag= wx.EXPAND)
 
-        slider = wx.Slider (self,value = 100, minValue = 1, maxValue=200) 
-        hbox0.Add (slider, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        label = wx.StaticText (self, wx.ID_ANY, "Zoom")
+        slider = wx.Slider (self,wx.ID_ANY, value = 1, minValue = 1, \
+                maxValue=100, style = wx.HORIZONTAL, size= (100, -1) ) 
+        slider.SetTick (20) 
+        hbox0.Add (label, 0, flag = wx.ALL | wx.ALIGN_RIGHT , border = 10)
+        hbox0.Add (slider, flag = wx.ALL | wx.ALIGN_RIGHT, border= 10) 
+
+        self.Bind (wx.EVT_SLIDER, self.OnSlide, slider)
+        self.Bind (wx.EVT_CHECKBOX, self.OnToggle, cb)
+
+        panel = scrolled.ScrolledPanel (self, wx.ID_ANY)
+
+        hbox1.Add (panel, 0, wx.CENTER)
 
         self.btnClose = wx.Button (self, wx.ID_CLOSE, "&Close")
         hbox2.Add (self.btnClose, 0, wx.CENTER, 20)
@@ -300,9 +313,17 @@ class ShowFrame (wx.Frame):
         vbox.Add ((5,5) , 0)
         vbox.Add (hbox2, 0, wx.CENTER)
         self.SetSizer(vbox)
+        minSize = vbox.GetMinSize()
+        self.SetSize (minSize )
 
     def OnClose (self, e):
         self.Close ()
+
+    def OnSlide (self, e):
+        print e.GetSelection ()
+
+    def OnToggle (self, e):
+        print e.GetSelection ()
 
 app = wx.App ()
 TDGUI (None, -1, "Time Doctor GUI")
