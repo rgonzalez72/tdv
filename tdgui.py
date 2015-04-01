@@ -80,10 +80,10 @@ class TDGUI (wx.Frame):
                 "All files|*.*", wx.OPEN)
 
         if diag.ShowModal () == wx.ID_OK:
-            self.dlg = wx.ProgressDialog ("Recover information",\
-                "Loading time doctor file", 100, self)
-            self.dlg.Update (10)
             tdiFileName =  diag.GetFilename ()
+            self.dlg = wx.ProgressDialog ("Recover information",\
+                "Loading time doctor file: " + tdiFileName, 100, self)
+            self.dlg.Update (10)
             fullPath = os.path.join (diag.GetDirectory(), tdiFileName)
             taskList = Task.TaskList ()
             self.dlg.Update (20)
