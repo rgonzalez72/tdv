@@ -53,15 +53,15 @@ class Plotter (Thread):
         for T in reversed (self._taskList._tasks):
             color = '#800000'
             if T.getSelected ():
-                x = [0]
-                y = [posY]
+#                x = [0]
+#                y = [posY]
                 for e in T._executions:
-#color = Plotter.COLORS [e.getCore ()]
-                    y += [posY, posY + Plotter.Y_STEP - 2, posY + Plotter.Y_STEP -2, 
+                    color = Plotter.COLORS [e.getCore ()]
+                    y = [posY, posY + Plotter.Y_STEP - 2, posY + Plotter.Y_STEP -2, 
                         posY]
-                    x += [e.getTimeIn(), e.getTimeIn(), e.getTimeOut(), e.getTimeOut ()]
-#                    ax1.plot (x, y, lw=1, color = color)
-                ax1.plot (x, y, lw=1, color = color)
+                    x = [e.getTimeIn(), e.getTimeIn(), e.getTimeOut(), e.getTimeOut ()]
+                    ax1.plot (x, y, lw=1, color = color)
+#  ax1.plot (x, y, lw=1, color = color)
                 posY += Plotter.Y_STEP
 
 
