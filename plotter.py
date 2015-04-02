@@ -3,12 +3,13 @@
 from threading import Thread
 import matplotlib
 import matplotlib.pyplot as plt
+import os
 
 class Plotter (Thread):
 
     # Colors for each core, max 8
-    COLORS = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff',
-        '#00ffff', '#000000', '#ff8080' ]
+    COLORS = ['#800000', '#008000', '#000080', '#808000', '#800080',
+        '#008080', '#000000', '#804040' ]
 
     Y_INITIAL = 10
     Y_LABEL_INITIAL = 20
@@ -43,19 +44,24 @@ class Plotter (Thread):
         minl = plt.FixedLocator (label_y)
         minf = y_names
 
+        fileName = os.path.basename (self._taskList.getFileName ())
 
-        fig = plt.figure ()
+        fig = plt.figure (fileName)
         ax1 = fig.add_subplot (111, autoscale_on=False,  
                 xlim =(0,self._taskList.getLastTime()), ylim =(0, 220))
         posY = Plotter.Y_INITIAL + 1
         for T in reversed (self._taskList._tasks):
+            color = '#800000'
             if T.getSelected ():
+                x = [0]
+                y = [posY]
                 for e in T._executions:
-                    color = Plotter.COLORS [e.getCore ()]
-                    y = [posY, posY + Plotter.Y_STEP - 2, posY + Plotter.Y_STEP -2, 
+#color = Plotter.COLORS [e.getCore ()]
+                    y += [posY, posY + Plotter.Y_STEP - 2, posY + Plotter.Y_STEP -2, 
                         posY]
-                    x = [e.getTimeIn(), e.getTimeIn(), e.getTimeOut(), e.getTimeOut ()]
-                    ax1.plot (x, y, lw=2, color = color)
+                    x += [e.getTimeIn(), e.getTimeIn(), e.getTimeOut(), e.getTimeOut ()]
+#                    ax1.plot (x, y, lw=1, color = color)
+                ax1.plot (x, y, lw=1, color = color)
                 posY += Plotter.Y_STEP
 
 

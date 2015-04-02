@@ -138,11 +138,13 @@ class TaskList (object):
         self._tasks =[]
         self._lastTime = 0
         self._numCores = 0
+        self._filename = ""
 
     def clone (self):
         TL = TaskList ()
         TL._lastTime = self._lastTime
         TL._numCores = self._numCores
+        TL._filename = self._filename
         for t in self._tasks:
             TL._tasks.append (t.clone ())
         return TL
@@ -159,6 +161,7 @@ class TaskList (object):
         return theTask
 
     def readTDFile (self, fileName):
+        self._filename = fileName
         fp = open (fileName, "r")
         self._lastTime = 0
         currentCore = 0
@@ -223,6 +226,9 @@ class TaskList (object):
 
     def getNumberOfCores (self):
         return self._numCores
+
+    def getFileName (self):
+        return self._filename
 
 if __name__ == '__main__':
     T = TaskList ()
