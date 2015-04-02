@@ -3,13 +3,15 @@
 from threading import Thread
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
 import os
 
 class Plotter (Thread):
 
-    # Colors for each core, max 8
-    COLORS = ['#800000', '#008000', '#000080', '#808000', '#800080',
-        '#008080', '#000000', '#804040' ]
+    # Colors for each core as RGBA tuple, max 8
+    COLORS = [(0.5, 0.,0.,1.), (0., 0.5, 0.,1.), (0.,0.,0.5,1.), 
+        (0.5,0.5,0.,1.), (0.5, 0., 0.5,1.), (0.,0.5, 0.5, 1.),
+        (0.,0.,0.,1.), (0.5, 0.25, 0.25, 1.)]
 
     Y_INITIAL = 10
     Y_LABEL_INITIAL = 20
@@ -50,20 +52,24 @@ class Plotter (Thread):
         ax1 = fig.add_subplot (111, autoscale_on=False,  
                 xlim =(0,self._taskList.getLastTime()), ylim =(0, 220))
         posY = Plotter.Y_INITIAL + 1
+
+        segments = []
+        colors = []
+
         for T in reversed (self._taskList._tasks):
-            color = '#800000'
             if T.getSelected ():
-#                x = [0]
-#                y = [posY]
                 for e in T._executions:
                     color = Plotter.COLORS [e.getCore ()]
-                    y = [posY, posY + Plotter.Y_STEP - 2, posY + Plotter.Y_STEP -2, 
-                        posY]
-                    x = [e.getTimeIn(), e.getTimeIn(), e.getTimeOut(), e.getTimeOut ()]
-                    ax1.plot (x, y, lw=1, color = color)
-#  ax1.plot (x, y, lw=1, color = color)
+                    s = [[e.getTimeIn (), posY], 
+                         [e.getTimeIn (), posY + Plotter.Y_STEP -2],
+                         [e.getTimeOut (), posY + Plotter.Y_STEP -2],
+                         [e.getTimeOut (), posY]]
+                    segments.append (s)
+                    colors.append (color)
                 posY += Plotter.Y_STEP
 
+        coll = LineCollection (segments, lw=2, colors=colors)
+        ax1.add_collection (coll)
 
         ax1.yaxis.set_major_locator (majl)
         ax1.yaxis.set_minor_locator (minl)
