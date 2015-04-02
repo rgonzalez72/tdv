@@ -25,17 +25,23 @@ class TDGUI (wx.Frame):
         self._sheets = []
         self._currentSheet = 0
 
-        self.btnSelAll = wx.Button (self, wx.ID_ANY, "&Select All")
-        self.btnUnselAll = wx.Button (self, wx.ID_ANY, "&Unselect All")
-        self.btnShow = wx.Button (self, wx.ID_ANY, "&Show")
+        self.btnSel = wx.Button (self, wx.ID_ANY, "&Select")
+        self.btnUnsel = wx.Button (self, wx.ID_ANY, "&Unselect") 
+        self.btnSelAll = wx.Button (self, wx.ID_ANY, "Select &All")
+        self.btnUnselAll = wx.Button (self, wx.ID_ANY, "U&nselect All")
+        self.btnShow = wx.Button (self, wx.ID_ANY, "S&how")
         
         # Disable the buttons until we load a file 
+        self.btnSel.Disable ()
+        self.btnUnsel.Disable ()
         self.btnSelAll.Disable ()
         self.btnUnselAll.Disable ()
         self.btnShow.Disable ()
 
         vbox.Add (self.notebook, 1, wx.EXPAND)
 
+        hbox1.Add (self.btnSel, 0, wx.CENTER | wx.RIGHT, 20)
+        hbox1.Add (self.btnUnsel, 0, wx.CENTER | wx.RIGHT, 20)
         hbox1.Add (self.btnSelAll, 0, wx.CENTER | wx.RIGHT, 20)
         hbox1.Add (self.btnUnselAll, 0, wx.CENTER, 20)
         hbox1.Add (self.btnShow, 0, wx.CENTER | wx.LEFT, 20)
@@ -44,6 +50,8 @@ class TDGUI (wx.Frame):
         vbox.Add (hbox1, 0, wx.CENTER)
         self.SetSizer(vbox)
 
+        self.Bind (wx.EVT_BUTTON, self.OnSelect, self.btnSel)
+        self.Bind (wx.EVT_BUTTON, self.OnUnselect, self.btnUnsel)
         self.Bind (wx.EVT_BUTTON, self.OnSelectAll, self.btnSelAll)
         self.Bind (wx.EVT_BUTTON, self.OnUnselectAll, self.btnUnselAll)
         self.Bind (wx.EVT_BUTTON, self.OnShow, self.btnShow)
@@ -100,7 +108,7 @@ class TDGUI (wx.Frame):
             taskList.sortByName ()
             self.dlg.Update (80)
             self.dlg.Destroy ()
-            sheet = TaskGrid (self.notebook, tdiFileName, taskList)
+            sheet = TaskGrid (self.notebook, tdiFileName, taskList, self)
             sheet.SetFocus ()
             self._sheets.append (sheet)
             self.notebook.AddPage (sheet, tdiFileName, True)
@@ -118,10 +126,17 @@ class TDGUI (wx.Frame):
         self._sheets = newSheets
         self.notebook.RemovePage (sel)
         if len (self._sheets) == 0:
+            self.btnSel.Disable ()
+            self.btnUnsel.Disable ()
             self.btnSelAll.Disable ()
             self.btnUnselAll.Disable ()
             self.btnShow.Disable ()
 
+    def OnSelect (self, e):
+        self._sheets [self._currentSheet].SelectRange ()
+
+    def OnUnselect (self, e):
+        self._sheets [self._currentSheet].UnselectRange ()
 
     def OnSelectAll (self, e):
         self._sheets [self._currentSheet].SelectAll ()
@@ -143,6 +158,14 @@ class TDGUI (wx.Frame):
             ", Number of cores: " + str(S.getNumberOfCores ()) + \
             ", Number of threads: " + str (S.getNumberOfTasks ())
         self.statusbar.SetStatusText (statusText)
+
+    def EnableSelect (self):
+        self.btnSel.Enable ()
+        self.btnUnsel.Enable ()
+
+    def DisableSelect (self):
+        self.btnSel.Disable ()
+        self.btnUnsel.Disable ()
 
 class AboutDialog (wx.Dialog):
     def __init__ (self, parent, id, title):
@@ -188,8 +211,9 @@ class AboutDialog (wx.Dialog):
         self.Close ()
 
 class TaskGrid (sheet.CSheet):
-    def __init__ (self, parent, tdiFile, taskList):
+    def __init__ (self, parent, tdiFile, taskList, mainWin):
         sheet.CSheet.__init__ (self, parent)
+        self._mainWin = mainWin
 
         self._taskList = taskList
         self._tdiFile = tdiFile
@@ -218,7 +242,10 @@ class TaskGrid (sheet.CSheet):
         self.SetColSize (3, 150)
         self.SetColSize (4, 60)
 
+        self._selected = []
+
         self.Bind (wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.OnLabelClick)
+        self.Bind (wx.grid.EVT_GRID_RANGE_SELECT, self.OnRangeSelect)
         self.redraw ()
 
     def redraw (self):
@@ -291,8 +318,28 @@ class TaskGrid (sheet.CSheet):
             self.redraw ()
         else:
             # toggle row
+#T = self._taskList.getTask (row)
+#            self.EnableRow (row, not T.getSelected ())
+            event.Skip ()
+
+    def OnRangeSelect (self, e):
+        if e.Selecting () == False:
+            self._selected = []
+            self._mainWin.DisableSelect ()
+        else:
+            for i in range (e.GetTopRow (), e.GetBottomRow () + 1):
+                self._selected.append (i)
+            self._mainWin.EnableSelect ()
+
+    def SelectRange (self):
+        for row in self._selected:
             T = self._taskList.getTask (row)
-            self.EnableRow (row, not T.getSelected ())
+            self.EnableRow (row, True)
+
+    def UnselectRange (self):
+        for row in self._selected:
+            T = self._taskList.getTask (row)
+            self.EnableRow (row, False)
 
     def SelectAll (self):
         for i in range (self._taskList.getNumberOfTasks ()):
