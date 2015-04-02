@@ -28,6 +28,11 @@ class TDGUI (wx.Frame):
         self.btnSelAll = wx.Button (self, wx.ID_ANY, "&Select All")
         self.btnUnselAll = wx.Button (self, wx.ID_ANY, "&Unselect All")
         self.btnShow = wx.Button (self, wx.ID_ANY, "&Show")
+        
+        # Disable the buttons until we load a file 
+        self.btnSelAll.Disable ()
+        self.btnUnselAll.Disable ()
+        self.btnShow.Disable ()
 
         vbox.Add (self.notebook, 1, wx.EXPAND)
 
@@ -99,6 +104,9 @@ class TDGUI (wx.Frame):
             sheet.SetFocus ()
             self._sheets.append (sheet)
             self.notebook.AddPage (sheet, tdiFileName, True)
+            self.btnSelAll.Enable ()
+            self.btnUnselAll.Enable ()
+            self.btnShow.Enable ()
 
     def OnCloseFile (self, e):
         sel = self.notebook.GetSelection ()
@@ -109,6 +117,10 @@ class TDGUI (wx.Frame):
             newSheets = self._sheets [sel+1:]
         self._sheets = newSheets
         self.notebook.RemovePage (sel)
+        if len (self._sheets) == 0:
+            self.btnSelAll.Disable ()
+            self.btnUnselAll.Disable ()
+            self.btnShow.Disable ()
 
 
     def OnSelectAll (self, e):
@@ -143,24 +155,32 @@ class AboutDialog (wx.Dialog):
         hbox3 = wx.BoxSizer (wx.HORIZONTAL)
 
         panel = wx.Panel (self, wx.ID_ANY)
+    
+        picturePanel = wx.Panel (panel, wx.ID_ANY)
+        picture = wx.StaticBitmap (picturePanel)
+        im = wx.Image ('tdv.png')
+        picture.SetBitmap (wx.BitmapFromImage (im))
+        hbox0.Add (picturePanel, 0, wx.LEFT | wx.RIGHT, 20 )
+
+
 
         label1 = wx.StaticText (panel, wx.ID_ANY, 
                 "An application for visualizing time doctor files.")
-        hbox0.Add (label1, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
+        hbox1.Add (label1, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
 
         self.btnClose = wx.Button (panel, wx.ID_CLOSE, "&Close")
         hbox3.Add (self.btnClose, 0, wx.CENTER, 20)
         self.Bind (wx.EVT_BUTTON, self.OnClose, self.btnClose)
 
-        vbox.Add (hbox0, 0, wx.EXPAND)
+        vbox.Add (hbox0, 0, wx.CENTER)
         vbox.Add (hbox1, 0, wx.LEFT)
         vbox.Add (hbox2, 0, wx.LEFT)
         vbox.Add (hbox3, 0, wx.CENTER)
 
         panel.SetSizer(vbox)
         minSize = vbox.GetMinSize()
-        height = minSize.GetHeight ()
-        minSize.SetHeight (height + 60)
+#  height = minSize.GetHeight ()
+#        minSize.SetHeight (height + 60)
         self.SetSize (minSize )
 
 
@@ -366,5 +386,5 @@ class ShowFrame (wx.Frame):
         print e.GetSelection ()
 
 app = wx.App ()
-TDGUI (None, -1, "Time Doctor GUI")
+TDGUI (None, -1, "Time Doctor Visualizer")
 app.MainLoop ()
