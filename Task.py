@@ -25,7 +25,7 @@ class TaskExecution (object):
             str(self._timeOut)
 
     def clone (self):
-        return Task (self._timeIn, self._timeOut, self._core)
+        return TaskExecution (self._timeIn, self._timeOut, self._core)
 
 class Task (object):
 
@@ -79,7 +79,7 @@ class Task (object):
     def getNumber (self):
         return self._number
 
-    def getDuration (self):
+    def getTotalDuration (self):
         return self._total
 
     def getPercentage (self):
@@ -205,7 +205,7 @@ class TaskList (object):
                 reverse = reverse)
 
     def sortByExecutionTime (self, reverse=False):
-        self._tasks =sorted (self._tasks, key=lambda k: k.getDuration (),
+        self._tasks =sorted (self._tasks, key=lambda k: k.getTotalDuration (),
                 reverse = reverse)
 
     def getNumberOfTasks (self):
