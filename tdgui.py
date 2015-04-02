@@ -195,7 +195,7 @@ class TaskGrid (sheet.CSheet):
         self._tdiFile = tdiFile
 
         self._numRows = self._taskList.getNumberOfTasks ()
-        self._numCols = 5
+        self._numCols = 6
         self.SetNumberRows (self._numRows)
         self.SetNumberCols (self._numCols)
         self.setReverseCols ()
@@ -208,7 +208,8 @@ class TaskGrid (sheet.CSheet):
         self.SetColLabelValue (1, "Number")
         self.SetColLabelValue (2, "Percentage")
         self.SetColLabelValue (3, "Accumulated time")
-        self.SetColLabelValue (4, "Show")
+        self.SetColLabelValue (4, "Cores")
+        self.SetColLabelValue (5, "Show")
 
         self.SetRowLabelSize (150)
         self.SetColSize (0, 60)
@@ -231,14 +232,15 @@ class TaskGrid (sheet.CSheet):
             self.SetCellValue (i, 1, str (T.getNumber ()))
             self.SetCellValue (i, 2, str (T.getPercentage ()) + " %")
             self.SetCellValue (i, 3, str (T.getTotalDuration ()))
+            self.SetCellValue (i, 4, T.getCoreString ())
             self.drawRow (i)
 
     def drawRow (self, row):
         T = self._taskList.getTask (row)
         if T.getSelected ():
-            self.SetCellValue (row, 4, "Yes")
+            self.SetCellValue (row, 5, "Yes")
         else:
-            self.SetCellValue (row, 4, "No")
+            self.SetCellValue (row, 5, "No")
 
         for i in range (self._numCols):
             if T.getSelected ():
@@ -281,6 +283,11 @@ class TaskGrid (sheet.CSheet):
                 self._taskList.sortByExecutionTime (self._reverseCols[2])
                 self.setReverseCols ()
                 self._reverseCols [2] = not oldValue
+            elif col == 4:
+                oldValue = self._reverseCols [4]
+                self._taskList.sortByCores (self._reverseCols[4])
+                self.setReverseCols ()
+                self._reverseCols [4] = not oldValue
             self.redraw ()
         else:
             # toggle row

@@ -43,6 +43,41 @@ class Task (object):
                   TYPE_ISR : TYPE_NAME_ISR,
                   TYPE_OTRO : TYPE_NAME_OTRO, }
 
+    CORES_MAP = [
+        0x00000001,
+        0x00000002,
+        0x00000004,
+        0x00000008,
+        0x00000010,
+        0x00000020,
+        0x00000040,
+        0x00000080,
+        0x00000100,
+        0x00000200,
+        0x00000400,
+        0x00000800,
+        0x00001000,
+        0x00002000,
+        0x00004000,
+        0x00008000,
+        0x00010000,
+        0x00020000,
+        0x00040000,
+        0x00080000,
+        0x00100000,
+        0x00200000,
+        0x00400000,
+        0x00800000,
+        0x01000000,
+        0x02000000,
+        0x04000000,
+        0x08000000,
+        0x10000000,
+        0x20000000,
+        0x40000000,
+        0x80000000
+    ]
+
     def __init__ (self, name, taskType, code):
         self._name = name
         self._type = taskType
@@ -52,6 +87,7 @@ class Task (object):
         self._total = 0
         self._percentage = 0.0
         self._selected = True
+        self._cores = 0x00000000 # A 32 bitmap
 
     def clone (self):
         T = Task (self._name, self._type, self._code)
@@ -59,6 +95,7 @@ class Task (object):
         T._total = self._total
         T._percentage = self._percentage
         T._selected = self._selected
+        T._cores = self._cores
         for e in self._executions:
             T.addExecution (e.clone ())
         return T
@@ -71,6 +108,7 @@ class Task (object):
         self._executions.append (e)
         self._number += 1
         self._total += e.getDuration ()
+        self._cores = self._cores | Task.CORES_MAP [e.getCore()]
 
     def calcPercentage (self, beginTime, endTime):
         self._percentage =  float (self._total) * 100.0 /\
@@ -132,6 +170,23 @@ class Task (object):
 
     def setSelected (self, selected):
         self._selected = selected
+
+    def getCores (self):
+        return self._cores
+
+    def getCoreList (self):
+        coreList = []
+        for i in range (len(Task.CORES_MAP)):
+            if self._cores & Task.CORES_MAP[i] != 0x00000000:
+                coreList.append (i)
+        return coreList
+
+    def getCoreString (self):
+        l = self.getCoreList ()
+        coreStr = ""
+        for c in l:
+            coreStr += str(c) + " "
+        return coreStr
 
 class TaskList (object):
     def __init__ (self):
@@ -209,6 +264,10 @@ class TaskList (object):
 
     def sortByExecutionTime (self, reverse=False):
         self._tasks =sorted (self._tasks, key=lambda k: k.getTotalDuration (),
+                reverse = reverse)
+
+    def sortByCores (self, reverse=False):
+        self._tasks =sorted (self._tasks, key=lambda k: k.getCores (),
                 reverse = reverse)
 
     def getNumberOfTasks (self):
