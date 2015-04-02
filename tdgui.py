@@ -6,6 +6,8 @@ from wx.lib import sheet
 import wx.lib.scrolledpanel as scrolled
 import sys
 import Task
+import matplotlib
+import matplotlib.pyplot as plt
 
 class TDGUI (wx.Frame):
     def __init__ (self, parent, id, title):
@@ -117,10 +119,38 @@ class TDGUI (wx.Frame):
         self._sheets [self._currentSheet].UnselectAll ()
 
     def OnShow (self, e):
-        title = "Showing " + self._sheets [self._currentSheet].getTdiFile ()
-        S = ShowFrame (self, title, self._sheets[self._currentSheet].getClonedList ())
-        S.Centre ()
-        S.Show ()
+#title = "Showing " + self._sheets [self._currentSheet].getTdiFile ()
+#        S = ShowFrame (self, title, self._sheets[self._currentSheet].getClonedList ())
+#        S.Centre ()
+#        S.Show ()
+        majl = plt.FixedLocator ([10, 30, 50])
+        minl = plt.FixedLocator ([20, 40])
+        minf = ["uno", "dos"]
+        x = [ 100, 100, 150, 150]
+        y = [ 11, 29, 29, 11]
+
+        x2 = [ 300, 300, 350, 350]
+        y2 = [ 11, 29, 29, 11]
+
+        x3 = [ 200, 200, 250, 250]
+        y3 = [ 31, 49, 49, 31]
+
+        fig = plt.figure ()
+        ax1 = fig.add_subplot (111, autoscale_on=False, xlim =(0, 500), ylim =(0,55))
+        ax1.plot (x, y, lw=2)
+        ax1.plot (x2, y2, lw=2, color='purple')
+        ax1.plot (x3, y3, lw=2, color='green')
+
+        ax1.yaxis.set_major_locator (majl)
+        ax1.yaxis.set_minor_locator (minl)
+        ax1.yaxis.set_major_formatter (plt.FormatStrFormatter (''))
+        ax1.yaxis.set_minor_formatter (plt.FixedFormatter(minf))
+
+        ax1.grid (True)
+
+        plt.ion ()
+        plt.show ()
+
 
     def OnChange (self, e):
         self._currentSheet = e.GetSelection ()
