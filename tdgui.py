@@ -151,7 +151,7 @@ class TDGUI (wx.Frame):
     def OnChange (self, e):
         self._currentSheet = e.GetSelection ()
         S = self._sheets [ self._currentSheet].getList ()
-        statusText = "Total time: " + str(S.getLastTime ()) + \
+        statusText = "Total time: " + plotter.Plotter.time_formater (S.getLastTime ()) + \
             ", Number of cores: " + str(S.getNumberOfCores ()) + \
             ", Number of threads: " + str (S.getNumberOfTasks ())
         self.statusbar.SetStatusText (statusText)

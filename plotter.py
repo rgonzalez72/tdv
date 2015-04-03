@@ -20,6 +20,10 @@ class Plotter (wx.Frame):
     Y_INITIAL = 10
     Y_LABEL_INITIAL = 20
     Y_STEP = 20
+
+    @staticmethod
+    def time_formater (t):
+        return '%d.%03d s' % (t / 100000000, (t%100000000) / 100000)
     
     def __init__ (self, parent, taskList):
         self._taskList = taskList
@@ -97,6 +101,12 @@ class Plotter (wx.Frame):
         ax1.yaxis.set_minor_locator (minl)
         ax1.yaxis.set_major_formatter (plt.FormatStrFormatter (''))
         ax1.yaxis.set_minor_formatter (plt.FixedFormatter(minf))
+
+        def x_formatter (x, pos):
+            return Plotter.time_formater (x)
+
+        ax1.xaxis.set_major_formatter (plt.FuncFormatter (x_formatter))
+        ax1.xaxis.set_ticks_position ('top')
 
         ax1.grid (True)
 
