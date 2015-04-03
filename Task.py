@@ -194,12 +194,14 @@ class TaskList (object):
         self._lastTime = 0
         self._numCores = 0
         self._filename = ""
+        self._speed = 0
 
     def clone (self):
         TL = TaskList ()
         TL._lastTime = self._lastTime
         TL._numCores = self._numCores
         TL._filename = self._filename
+        TL._speed = self._speed
         for t in self._tasks:
             TL._tasks.append (t.clone ())
         return TL
@@ -242,6 +244,9 @@ class TaskList (object):
                 T.addExecution (E)
                 if endTime > self._lastTime:
                     self._lastTime = endTime
+            elif line.startswith ("SPEED"):
+                parts = line.strip ().split (" ")
+                self._speed = int (parts[1])
             
 
     def getLastTime (self):
@@ -288,6 +293,20 @@ class TaskList (object):
 
     def getFileName (self):
         return self._filename
+
+    def getSpeed (self):
+        return self._speed ()
+
+    def getTimeFormatted (self, t):
+        return "%1.03lf s" % (float(t)/ float(self._speed))
+
+    def isAnyTaskSelected (self):
+        anySel = False
+        for t in self._tasks:
+            if t.getSelected ():
+                anySel = True
+                break
+        return anySel
 
 if __name__ == '__main__':
     T = TaskList ()

@@ -134,15 +134,23 @@ class TDGUI (wx.Frame):
 
     def OnSelect (self, e):
         self._sheets [self._currentSheet].SelectRange ()
+        if self._sheets [self._currentSheet]._taskList.isAnyTaskSelected ():
+            self.btnShow.Enable ()
 
     def OnUnselect (self, e):
         self._sheets [self._currentSheet].UnselectRange ()
+        if not self._sheets [self._currentSheet]._taskList.isAnyTaskSelected ():
+            self.btnShow.Disable ()
 
     def OnSelectAll (self, e):
         self._sheets [self._currentSheet].SelectAll ()
+        if self._sheets [self._currentSheet]._taskList.isAnyTaskSelected ():
+            self.btnShow.Enable ()
 
     def OnUnselectAll (self, e):
         self._sheets [self._currentSheet].UnselectAll ()
+        if not self._sheets [self._currentSheet]._taskList.isAnyTaskSelected ():
+            self.btnShow.Disable ()
 
     def OnShow (self, e):
         frame = plotter.Plotter (self, self._sheets [self._currentSheet].getClonedList ())
@@ -151,7 +159,7 @@ class TDGUI (wx.Frame):
     def OnChange (self, e):
         self._currentSheet = e.GetSelection ()
         S = self._sheets [ self._currentSheet].getList ()
-        statusText = "Total time: " + plotter.Plotter.time_formater (S.getLastTime ()) + \
+        statusText = "Total time: " + S.getTimeFormatted (S.getLastTime ()) + \
             ", Number of cores: " + str(S.getNumberOfCores ()) + \
             ", Number of threads: " + str (S.getNumberOfTasks ())
         self.statusbar.SetStatusText (statusText)
