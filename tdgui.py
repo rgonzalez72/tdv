@@ -25,11 +25,11 @@ class TDGUI (wx.Frame):
         self._sheets = []
         self._currentSheet = 0
 
-        self.btnSel = wx.Button (self, wx.ID_ANY, "&Select")
-        self.btnUnsel = wx.Button (self, wx.ID_ANY, "&Unselect") 
-        self.btnSelAll = wx.Button (self, wx.ID_ANY, "Select &All")
-        self.btnUnselAll = wx.Button (self, wx.ID_ANY, "U&nselect All")
-        self.btnShow = wx.Button (self, wx.ID_ANY, "S&how")
+        self.btnSel = wx.Button (self, wx.ID_ANY, "&Show")
+        self.btnUnsel = wx.Button (self, wx.ID_ANY, "Hi&de") 
+        self.btnSelAll = wx.Button (self, wx.ID_ANY, "Show &All")
+        self.btnUnselAll = wx.Button (self, wx.ID_ANY, "H&ide All")
+        self.btnShow = wx.Button (self, wx.ID_ANY, "&Visualize")
         
         # Disable the buttons until we load a file 
         self.btnSel.Disable ()
@@ -145,10 +145,6 @@ class TDGUI (wx.Frame):
         self._sheets [self._currentSheet].UnselectAll ()
 
     def OnShow (self, e):
-#title = "Showing " + self._sheets [self._currentSheet].getTdiFile ()
-#        S = ShowFrame (self, title, self._sheets[self._currentSheet].getClonedList ())
-#        S.Centre ()
-#        S.Show ()
         frame = plotter.Plotter (self, self._sheets [self._currentSheet].getClonedList ())
         frame.Show ()
 
@@ -360,85 +356,7 @@ class TaskGrid (sheet.CSheet):
     def getList (self):
         return self._taskList
 
-class OneGraphPanel (wx.Panel):
-    def __init__ (self, parent, pos, size, task, core):
-        wx.Panel.__init__ (self, parent, wx.ID_ANY, pos=pos, size=size)
-        self._task = task
-        self._core = core
 
-
-class GraphicPanel (scrolled.ScrolledPanel):
-    def __init__ (self, parent, taskList):
-        total = 0
-        scrolled.ScrolledPanel.__init__ (self, parent = parent, id= wx.ID_ANY, pos = (10,10), size = (400, 300), style = wx.TAB_TRAVERSAL|wx.SUNKEN_BORDER)
-
-        InsidePanel = wx.Panel(self)
-
-        for i in range (taskList.getNumberOfTasks ()):
-            T = taskList.getTask (i)
-            if T.getSelected ():
-                wx.StaticText( InsidePanel, wx.ID_ANY, T.getName(), 
-                        pos = (10, 10 + (total * 15)))
-                OneGraphPanel ( InsidePanel, (200, 10 + (total * 15)),
-                        (800, 15), T, Task.Task.ALL_CORES)
-                total += 1
-
-
-        PanelSizer = wx.BoxSizer ()
-        PanelSizer.Add(InsidePanel, proportion=1)
-        self.SetSizer (PanelSizer)
-        
-        self.SetupScrolling(scroll_x=True, scroll_y=True)
-
-class ShowFrame (wx.Frame):
-    def __init__(self, parent, title, taskList):
-        wx.Frame.__init__ (self, parent, wx.ID_ANY, title)
-        self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
-        self._taskList = taskList
-        vbox = wx.BoxSizer (wx.VERTICAL)
-        hbox0 = wx.BoxSizer (wx.HORIZONTAL)
-#        hbox1 = wx.BoxSizer (wx.HORIZONTAL)
-        hbox2 = wx.BoxSizer (wx.HORIZONTAL)
-
-        cb = wx.CheckBox (self, wx.ID_ANY, "&Separate Cores")         
-        hbox0.Add (cb, 0,  flag = wx.ALL | wx.ALIGN_LEFT, border = 10)
-        hbox0.Add ((5,5) , 0, flag= wx.EXPAND)
-
-        label = wx.StaticText (self, wx.ID_ANY, "Zoom")
-        slider = wx.Slider (self,wx.ID_ANY, value = 1, minValue = 1, \
-                maxValue=100, style = wx.HORIZONTAL, size= (100, -1) ) 
-        slider.SetTick (20) 
-        hbox0.Add (label, 0, flag = wx.ALL | wx.ALIGN_RIGHT , border = 10)
-        hbox0.Add (slider, flag = wx.ALL | wx.ALIGN_RIGHT, border= 10) 
-
-        self.Bind (wx.EVT_SLIDER, self.OnSlide, slider)
-        self.Bind (wx.EVT_CHECKBOX, self.OnToggle, cb)
-
-        panel = wx.Panel (self, wx.ID_ANY)
-        gp = GraphicPanel (panel, taskList)
-#hbox1.Add (panel, 0, wx.CENTER | wx.ALL, 10)
-
-        self.btnClose = wx.Button (self, wx.ID_CLOSE, "&Close")
-        hbox2.Add (self.btnClose, 0, wx.CENTER, 20)
-        self.Bind (wx.EVT_BUTTON, self.OnClose, self.btnClose)
-
-        vbox.Add (hbox0, 0, wx.CENTER)
-        vbox.Add ((5,5) , 0)
-        vbox.Add (panel, 1, wx.EXPAND)
-        vbox.Add ((5,5) , 0)
-        vbox.Add (hbox2, 0, wx.CENTER)
-        self.SetSizer(vbox)
-        minSize = vbox.GetMinSize()
-        self.SetSize (minSize )
-
-    def OnClose (self, e):
-        self.Close ()
-
-    def OnSlide (self, e):
-        print e.GetSelection ()
-
-    def OnToggle (self, e):
-        print e.GetSelection ()
 
 app = wx.App ()
 TDGUI (None, -1, "Time Doctor Visualizer")
