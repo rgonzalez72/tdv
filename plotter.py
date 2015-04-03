@@ -26,8 +26,8 @@ class Plotter (wx.Frame):
         fileName = os.path.basename (self._taskList.getFileName ())
         wx.Frame.__init__ (self, parent, wx.ID_ANY, "Showing " + fileName)
         self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
-        matplotlib.rc ('ytick', labelsize=8)
-        matplotlib.rc ('xtick', labelsize=8)
+        matplotlib.rc ('ytick', labelsize=7)
+        matplotlib.rc ('xtick', labelsize=7)
 
         self.fig = Figure((9,8), 75)
         self.canvas = FigureCanvasWx (self, -1, self.fig)
@@ -74,7 +74,7 @@ class Plotter (wx.Frame):
         fileName = os.path.basename (self._taskList.getFileName ())
 
         ax1 = self.fig.add_subplot (111, autoscale_on=False,  
-                xlim =(0,self._taskList.getLastTime()), ylim =(0, 220))
+                xlim =(0,self._taskList.getLastTime()), ylim =(-10, 220))
         posY = Plotter.Y_INITIAL + 1
 
         segments = []
