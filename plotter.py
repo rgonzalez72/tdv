@@ -4,7 +4,7 @@ import matplotlib
 matplotlib.use ('WX')
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
-from matplotlib.backends.backend_wx import Toolbar, FigureCanvasWx, FigureManager
+from matplotlib.backends.backend_wx import Toolbar, FigureCanvasWx, FigureManager, NavigationToolbar2Wx
 from matplotlib.figure import Figure
 from matplotlib.axes import Subplot
 import os
@@ -29,7 +29,7 @@ class Plotter (wx.Frame):
 
         self.fig = Figure((9,8), 75)
         self.canvas = FigureCanvasWx (self, -1, self.fig)
-        self.toolbar = Toolbar(self.canvas)
+        self.toolbar = NavigationToolbar2Wx(self.canvas)
 
         # On Windows, default frame size behaviour is incorrect
         # you don't need this under Linux
