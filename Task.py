@@ -33,15 +33,15 @@ class Task (object):
 
     TYPE_TASK = "0"
     TYPE_ISR = "1"
-    TYPE_OTRO = "8"
+    TYPE_AGENT = "8"
 
     TYPE_NAME_TASK = "Task"
     TYPE_NAME_ISR = "Isr"
-    TYPE_NAME_OTRO = "Otro"
+    TYPE_NAME_AGENT = "Agent"
 
     TYPE_NAMES = {TYPE_TASK : TYPE_NAME_TASK,
                   TYPE_ISR : TYPE_NAME_ISR,
-                  TYPE_OTRO : TYPE_NAME_OTRO, }
+                  TYPE_AGENT : TYPE_NAME_AGENT, }
 
     CORES_MAP = [
         0x00000001,
