@@ -26,7 +26,8 @@ class Plotter (wx.Frame):
         fileName = os.path.basename (self._taskList.getFileName ())
         wx.Frame.__init__ (self, parent, wx.ID_ANY, "Showing " + fileName)
         self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
-        matplotlib.rc ('ytick', labelsize=6)
+        matplotlib.rc ('ytick', labelsize=8)
+        matplotlib.rc ('xtick', labelsize=8)
 
         self.fig = Figure((9,8), 75)
         self.canvas = FigureCanvasWx (self, -1, self.fig)
