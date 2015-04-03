@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
 import matplotlib
-matplotlib.use ('WX')
+matplotlib.use ('WXAgg')
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
-from matplotlib.backends.backend_wx import Toolbar, FigureCanvasWx, FigureManager, NavigationToolbar2Wx
+from matplotlib.backends.backend_wxagg import Toolbar, FigureCanvasWxAgg, NavigationToolbar2Wx
 from matplotlib.figure import Figure
 from matplotlib.axes import Subplot
 import os
@@ -30,7 +30,7 @@ class Plotter (wx.Frame):
         matplotlib.rc ('xtick', labelsize=7)
 
         self.fig = Figure((9,8), 75)
-        self.canvas = FigureCanvasWx (self, -1, self.fig)
+        self.canvas = FigureCanvasWxAgg (self, -1, self.fig)
         self.toolbar = NavigationToolbar2Wx(self.canvas)
 
         # On Windows, default frame size behaviour is incorrect
@@ -38,8 +38,6 @@ class Plotter (wx.Frame):
         tw, th = self.toolbar.GetSizeTuple()
         fw, fh = self.canvas.GetSizeTuple()
         self.toolbar.SetSize(wx.Size(fw, th))
-        # Create a figure manager to manage things
-        self.figmgr = FigureManager(self.canvas, 1, self)
         # Now put all into a sizer
         sizer = wx.BoxSizer(wx.VERTICAL)
         # This way of adding to sizer allows resizing
