@@ -149,7 +149,8 @@ class TDGUI (wx.Frame):
 #        S = ShowFrame (self, title, self._sheets[self._currentSheet].getClonedList ())
 #        S.Centre ()
 #        S.Show ()
-        plotter.Plotter (self._sheets [self._currentSheet].getClonedList ())
+        frame = plotter.Plotter (self, self._sheets [self._currentSheet].getClonedList ())
+        frame.Show ()
 
     def OnChange (self, e):
         self._currentSheet = e.GetSelection ()

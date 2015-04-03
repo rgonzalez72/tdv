@@ -1,12 +1,16 @@
 #!/usr/bin/python
 
-from threading import Thread
 import matplotlib
+matplotlib.use ('WX')
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
+from matplotlib.backends.backend_wx import Toolbar, FigureCanvasWx, FigureManager
+from matplotlib.figure import Figure
+from matplotlib.axes import Subplot
 import os
+import wx
 
-class Plotter (Thread):
+class Plotter (wx.Frame):
 
     # Colors for each core as RGBA tuple, max 8
     COLORS = [(0.5, 0.,0.,1.), (0., 0.5, 0.,1.), (0.,0.,0.5,1.), 
@@ -17,13 +21,31 @@ class Plotter (Thread):
     Y_LABEL_INITIAL = 20
     Y_STEP = 20
     
-    def __init__ (self, taskList):
-        Thread.__init__ (self)
+    def __init__ (self, parent, taskList):
         self._taskList = taskList
-        self.start ()
+        fileName = os.path.basename (self._taskList.getFileName ())
+        wx.Frame.__init__ (self, parent, wx.ID_ANY, "Showing " + fileName)
 
-    def run (self):
-        """Run the thread """
+        self.fig = Figure((9,8), 75)
+        self.canvas = FigureCanvasWx (self, -1, self.fig)
+        self.toolbar = Toolbar(self.canvas)
+
+        # On Windows, default frame size behaviour is incorrect
+        # you don't need this under Linux
+        tw, th = self.toolbar.GetSizeTuple()
+        fw, fh = self.canvas.GetSizeTuple()
+        self.toolbar.SetSize(wx.Size(fw, th))
+        # Create a figure manager to manage things
+        self.figmgr = FigureManager(self.canvas, 1, self)
+        # Now put all into a sizer
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        # This way of adding to sizer allows resizing
+        sizer.Add(self.canvas, 1, wx.LEFT|wx.TOP|wx.GROW)
+        # Best to allow the toolbar to resize!
+        sizer.Add(self.toolbar, 0, wx.GROW)
+        self.SetSizer(sizer)
+        self.Fit()
+
         # Calculate the number of rows
         numRows = 0
         # Label position
@@ -48,8 +70,7 @@ class Plotter (Thread):
 
         fileName = os.path.basename (self._taskList.getFileName ())
 
-        fig = plt.figure (fileName)
-        ax1 = fig.add_subplot (111, autoscale_on=False,  
+        ax1 = self.fig.add_subplot (111, autoscale_on=False,  
                 xlim =(0,self._taskList.getLastTime()), ylim =(0, 220))
         posY = Plotter.Y_INITIAL + 1
 
@@ -78,4 +99,10 @@ class Plotter (Thread):
 
         ax1.grid (True)
 
-        plt.show ()
+        self.toolbar.update ()
+
+    def GetToolBar(self):
+        # You will need to override GetToolBar if you are using an
+        # unmanaged toolbar in your frame
+        return self.toolbar
+
