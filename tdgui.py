@@ -196,13 +196,17 @@ class AboutDialog (wx.Dialog):
                 "An application for visualizing time doctor files.")
         hbox1.Add (label1, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
 
+        VERSION = "eng.0.0.1"
+        label1 = wx.StaticText (panel, wx.ID_ANY, "Version: " + VERSION)
+        hbox2.Add (label1, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
+
         self.btnClose = wx.Button (panel, wx.ID_CLOSE, "&Close")
         hbox3.Add (self.btnClose, 0, wx.CENTER, 20)
         self.Bind (wx.EVT_BUTTON, self.OnClose, self.btnClose)
 
         vbox.Add (hbox0, 0, wx.CENTER)
         vbox.Add (hbox1, 0, wx.LEFT)
-        vbox.Add (hbox2, 0, wx.LEFT)
+        vbox.Add (hbox2, 0, wx.CENTER)
         vbox.Add (hbox3, 0, wx.CENTER)
 
         panel.SetSizer(vbox)
