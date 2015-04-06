@@ -211,20 +211,20 @@ class AboutDialog (wx.Dialog):
         picture = wx.StaticBitmap (picturePanel)
         im = wx.Image ('tdv.png')
         picture.SetBitmap (wx.BitmapFromImage (im))
-        hbox0.Add (picturePanel, 0, wx.LEFT | wx.RIGHT, 20 )
+        hbox0.Add (picturePanel, 0, wx.LEFT | wx.RIGHT, 10 )
 
 
 
         label1 = wx.StaticText (panel, wx.ID_ANY, 
                 "An application for visualizing time doctor files.")
-        hbox1.Add (label1, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
+        hbox1.Add (label1, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 10)
 
         VERSION = "eng.0.0.1"
         label1 = wx.StaticText (panel, wx.ID_ANY, "Version: " + VERSION)
-        hbox2.Add (label1, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 20)
+        hbox2.Add (label1, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.BOTTOM, 10)
 
         self.btnClose = wx.Button (panel, wx.ID_CLOSE, "&Close")
-        hbox3.Add (self.btnClose, 0, wx.CENTER, 20)
+        hbox3.Add (self.btnClose, 0, wx.CENTER, 10)
         self.Bind (wx.EVT_BUTTON, self.OnClose, self.btnClose)
 
         vbox.Add (hbox0, 0, wx.CENTER)
@@ -233,10 +233,8 @@ class AboutDialog (wx.Dialog):
         vbox.Add (hbox3, 0, wx.CENTER)
 
         panel.SetSizer(vbox)
-        minSize = vbox.GetMinSize()
-#  height = minSize.GetHeight ()
-#        minSize.SetHeight (height + 60)
-        self.SetSize (minSize )
+        minSize = panel.GetMinSize ()
+        panel.SetSize (minSize)
 
 
     def OnClose (self, e):
