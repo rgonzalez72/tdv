@@ -117,6 +117,8 @@ class TDGUI (wx.Frame):
             self.btnShow.Enable ()
 
     def OnCloseFile (self, e):
+        if len(self._sheets) == 0:
+            return 
         sel = self.notebook.GetSelection ()
         newSheets = []
         if sel > 0:
@@ -131,6 +133,7 @@ class TDGUI (wx.Frame):
             self.btnSelAll.Disable ()
             self.btnUnselAll.Disable ()
             self.btnShow.Disable ()
+            self.statusbar.SetStatusText (' ')
 
     def OnSelect (self, e):
         self._sheets [self._currentSheet].SelectRange ()
