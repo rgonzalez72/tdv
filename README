@@ -1,0 +1,8 @@
+Time Doctor Visualizer
+
+A tool to visualize linux timedoctor files. This tool is written in Python and uses wxPython and matplolib for the UI and graphics.
+
+You must install python and the libraries: matplotlib, numpy and wxPython before you can use the program. The main file tdgui.py. 
+
+I managed to run the program in Windows, Linux and MAC.
+
