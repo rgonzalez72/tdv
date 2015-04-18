@@ -248,6 +248,7 @@ class TaskList (object):
                 pos = line.find ("-")
                 currentCore = int (line.strip () [pos+1])
                 self._numCores += 1
+                stTimes = [] 
             elif line.startswith ("NAM"):
                 parts = line.strip ().split (" ")
                 T = Task (parts[3], parts[1], parts[2])
@@ -255,19 +256,25 @@ class TaskList (object):
                     self._tasks.append (T)
             elif line.startswith ("STA"):
                 parts = line.strip ().split (" ")
-                stTime = int (parts[3])
+                stTime = float (parts[3]) * self._speed
+                stTimes.append (stTime)
             elif line.startswith ("STO"):
-                parts = line.strip ().split (" ")
-                endTime = int (parts[3])
-                code = parts[2]
-                T = self.findTaskByCode (code)
-                E = TaskExecution (stTime, endTime, currentCore)
-                T.addExecution (E)
-                if endTime > self._lastTime:
-                    self._lastTime = endTime
+                if len (stTimes) >= 1:
+                    parts = line.strip ().split (" ")
+                    endTime = float (parts[3]) * self._speed
+                    code = parts[2]
+                    T = self.findTaskByCode (code)
+                    E = TaskExecution (stTimes[-1], endTime , currentCore)
+                    T.addExecution (E)
+                    stTimes = stTimes [:-1]
+                    if endTime > self._lastTime:
+                        self._lastTime = endTime
+                    stTime = None
             elif line.startswith ("SPEED"):
                 parts = line.strip ().split (" ")
-                self._speed = int (parts[1])
+                
+                # Units are nanoseconds
+                self._speed = 1000000000.0 /float (parts[1])
             
 
     def getLastTime (self):
@@ -316,10 +323,11 @@ class TaskList (object):
         return self._filename
 
     def getSpeed (self):
-        return self._speed ()
+        return self._speed 
 
     def getTimeFormatted (self, t):
-        return "%1.03lf s" % (float(t)/ float(self._speed))
+        # Convert to seconds and add the units
+        return "%1.03lf s" % (t / 1000000000.0)
 
     def isAnyTaskSelected (self):
         anySel = False
