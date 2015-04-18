@@ -21,7 +21,7 @@
 
 
 import wx
-import os
+import os  
 from wx.lib import sheet
 import wx.lib.scrolledpanel as scrolled
 import sys
