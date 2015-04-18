@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import sys
+import os
 
 ################################################################################
 #  Copyright (C) 2015  Rodolfo Gonzalez <rgonzalez72@yahoo.com>
@@ -188,7 +189,7 @@ class Isr (object):
     SOFT_IRQ_NAMES = ['HI', 'TIMER', 'NET_TX', 'NET_RX', 'BLOCK', 
         'BLOCK_IOPOLL', 'TASKLET', 'SCHED', 'HRTIMER', 'RCU']
 
-    def __init__ (self, header, soft):
+    def __init__ (self, header, hardIsr, soft):
         self._header = header
         self._soft = soft
         self._name = None
@@ -197,6 +198,11 @@ class Isr (object):
                 self._name = Isr.SOFT_IRQ_NAMES [self._header.getId ()]
             except:
                 self._name = "Soft_IRQ_" + str (self._header.getId ()) 
+        else:
+            try:
+                self._name = hardIsr [str(self._header.getId ())]
+            except:
+                self._name = "IRQ_" + str (self._header.getId ()) 
 
     def getIsSoft (self):
         return self._soft
@@ -214,8 +220,8 @@ class Isr (object):
         return retVal
 
 class IsrEntry (Isr):
-    def __init__ (self, header, soft):
-        Isr.__init__ (self, header, soft)
+    def __init__ (self, header, hardIsr, soft):
+        Isr.__init__ (self, header, hardIsr, soft)
 
     def __str__ (self):
         beginning = ""
@@ -224,8 +230,8 @@ class IsrEntry (Isr):
         return beginning + "Isr Entry " + Isr.__str__ (self)
 
 class IsrExit (Isr):
-    def __init__ (self, header, soft):
-        Isr.__init__ (self, header, soft)
+    def __init__ (self, header, hardIsr, soft):
+        Isr.__init__ (self, header, hardIsr, soft)
 
     def __str__ (self):
         beginning = ""
@@ -263,6 +269,8 @@ class rawTDIFile (object):
     TD_CMD_KPROBE_SINGLE         = 19
 
     TD_CMD_TASK_MIGRATE          = 20
+
+    HARD_ISR_FILE = "cat_proc_interrupts.txt"
 
 
     def __init__ (self):
@@ -314,12 +322,31 @@ class rawTDIFile (object):
         return TaskExit (header, name, tgid)
 
     def processIsrEntry (self, fp, header, soft = False):
-        return IsrEntry (header, soft)
+        return IsrEntry (header, self._hardIsr, soft)
 
     def processIsrExit (self, fp, header, soft=False):
-        return IsrExit (header, soft)
+        return IsrExit (header, self._hardIsr, soft)
+
+    def readHardIsr (self, fileName):
+        # We try to find a HARD_ISR_FILE in the same folder as the raw file
+        self._hardIsr = {}
+
+        path = os.path.join(os.path.dirname (os.path.abspath (fileName)), 
+                rawTDIFile.HARD_ISR_FILE)
+
+        if os.path.isfile (path):
+            fp = open (path, "r")
+            for line in fp:
+                line = line.strip ()
+                pos = line.find ("GIC")
+                if pos > -1:
+                    parts = line.split (' ')
+                    self._hardIsr [parts[0][:-1]] =  parts[-1].strip ()
+            fp.close ()
+
 
     def readRawFile (self, fileName):
+        self.readHardIsr (fileName)
         fp = open (fileName, "rb")
         try:
             block = fp.read (8)
@@ -333,10 +360,10 @@ class rawTDIFile (object):
 #                    print exit
                 elif header.getCmd () == rawTDIFile.TD_CMD_ISR_ENTRY:
                     entry = self.processIsrEntry (fp, header)
-#                    print entry
+                    print entry
                 elif header.getCmd () == rawTDIFile.TD_CMD_ISR_EXIT:
                     exit = self.processIsrExit (fp, header)
-#                    print exit
+                    print exit
                 elif header.getCmd () == rawTDIFile.TD_CMD_SOFTIRQ_ENTRY:
                     entry = self.processIsrEntry (fp, header, True)
                     print entry
