@@ -110,6 +110,7 @@ class Task (object):
         self._percentage = 0.0
         self._selected = True
         self._cores = 0x00000000 # A 32 bitmap
+        self._lastStart = None
 
     def clone (self):
         T = Task (self._name, self._type, self._code)
@@ -164,7 +165,10 @@ class Task (object):
         return self._summary 
 
     def __eq__ (self, other):
-        return self._code == other._code
+        if type (other) is Task:
+            return self._code == other._code
+        else:
+            return False
 
     def __bt__ (self, other):
         return self._name.lower () > other._name.lower ()
@@ -210,6 +214,15 @@ class Task (object):
             coreStr += str(c) + " "
         return coreStr
 
+    def getLastStart (self):
+        return self._lastStart
+
+    def setLastStart (self, lastStart):
+        self._lastStart = lastStart
+
+    def resetLastStart (self):
+        self._lastStart = None
+
 class TaskList (object):
     def __init__ (self):
         self._tasks =[]
@@ -250,7 +263,6 @@ class TaskList (object):
                 pos = line.find ("-")
                 currentCore = int (line.strip () [pos+1])
                 self._numCores += 1
-                stTimes = [] 
             elif line.startswith ("NAM"):
                 parts = line.strip ().split (" ")
                 T = Task (parts[3], parts[1], parts[2])
@@ -261,21 +273,21 @@ class TaskList (object):
                     return -1
                 parts = line.strip ().split (" ")
                 stTime = float (parts[3]) * self._speed
-                stTimes.append (stTime)
+                code = parts[2]
+                T = self.findTaskByCode (code)
+                T.setLastStart (stTime)
             elif line.startswith ("STO"):
                 if self._speed == 0 or currentCore == -1:
                     return -1
-                if len (stTimes) >= 1:
-                    parts = line.strip ().split (" ")
-                    endTime = float (parts[3]) * self._speed
-                    code = parts[2]
-                    T = self.findTaskByCode (code)
-                    E = TaskExecution (stTimes[-1], endTime , currentCore)
+                parts = line.strip ().split (" ")
+                endTime = float (parts[3]) * self._speed
+                code = parts[2]
+                T = self.findTaskByCode (code)
+                if T.getLastStart () != None:
+                    E = TaskExecution (T.getLastStart(), endTime , currentCore)
                     T.addExecution (E)
-                    stTimes = stTimes [:-1]
-                    if endTime > self._lastTime:
-                        self._lastTime = endTime
-                    stTime = None
+                if endTime > self._lastTime:
+                    self._lastTime = endTime
             elif line.startswith ("SPEED"):
                 parts = line.strip ().split (" ")
                 
@@ -347,8 +359,76 @@ class TaskList (object):
                 break
         return anySel
 
+
+    def processRawTask (self, task):
+        cpu = task.getHeader ().getCpu ()
+        timestamp = task.getHeader ().getTimeStamp ()
+        if cpu >= self._numCores:
+            self._numCores = cpu +1
+
+        if timestamp > self._lastTime:
+            self._lastTime = timestamp
+
+        taskType = None
+        isEntry = None
+        if (type (task) is rawTDIFile.TaskEntry ):
+            taskType = Task.TYPE_TASK
+            isEntry = True
+        elif (type (task) is rawTDIFile.TaskExit):
+            taskType = Task.TYPE_TASK
+            isEntry = False
+        elif (type (task) is rawTDIFile.IsrEntry ):
+            isEntry = True 
+            if task.getIsSoft ():
+                taskType = Task.TYPE_ISR
+            else:
+                taskType = Task.TYPE_AGENT
+        elif (type (task) is rawTDIFile.IsrExit):
+            isEntry = False 
+            if task.getIsSoft ():
+                taskType = Task.TYPE_ISR
+            else:
+                taskType = Task.TYPE_AGENT
+
+        if taskType != None:
+            # Check is the task already exits
+            theTask = self.findTaskByCode (task.getTaskId ())
+            if theTask == None:
+                theTask = Task (task.getName (), taskType, task.getTaskId())
+                self._tasks.append (theTask)
+
+            if isEntry:
+                theTask.setLastStart (task.getHeader().getTimeStamp ())
+            else:
+                staTime = theTask.getLastStart ()
+                # At the start of the file we may have stop with no start
+                if staTime != None:
+                    E = TaskExecution (staTime, 
+                            task.getHeader().getTimeStamp () ,
+                            task.getHeader().getCpu())
+                    theTask.addExecution (E)
+                    theTask.resetLastStart ()
+        else:
+            print "Unexpected task type!!!"
+            
+                
+
     def readRawFile (self, fileName):
-        retVal = -1
+        self._tasks =[]
+        self._lastTime = 0
+        self._numCores = 0
+        self._filename = fileName
+        self._speed = 1 # Not really relevant here
+        # A list of started tasks
+        self._rawStatus = []
+        R = rawTDIFile.rawTDIFile ()
+        retVal = R.readRawFile (fileName, self.processRawTask)
+
+        print "Last time " + str(self._lastTime)
+        print "Num cores " + str(self._numCores)
+        print "Speed " + str(self._speed)
+        print "Num tasks " + str(len(self._tasks))
+
         return retVal
 
     def readFile (self, fileName):
@@ -361,10 +441,10 @@ class TaskList (object):
             pass
         
         if retVal != 0:
-            try:
-                retVal = self.readRawFile (fileName)
-            except:
-                pass
+#try:
+            retVal = self.readRawFile (fileName)
+#            except:
+#                pass
 
         return retVal
 

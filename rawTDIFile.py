@@ -169,7 +169,7 @@ class TaskAction (object):
         return self._tgid
 
     def getTaskId (self):
-        return str (self._id) + str(self._tgid)
+        return str (self._header.getId ()) + str(self._tgid)
 
     def getIsEntry (self):
         return self._isEntry
@@ -214,14 +214,14 @@ class Isr (object):
     def getIsSoft (self):
         return self._soft
 
-    def getHeader ():
+    def getHeader (self):
         return self._header
 
-    def getName ():
+    def getName (self):
         return self._name
 
     def getTaskId (self):
-        return "IRQ_" + str(self._id)
+        return "IRQ_" + str(self._header.getId ())
 
     def getIsEntry (self):
         return self._isEntry
@@ -364,56 +364,40 @@ class rawTDIFile (object):
         consecutiveErrors = 0
         self.readHardIsr (fileName)
         fp = open (fileName, "rb")
-        try:
-            block = fp.read (8)
-            while len (block) == 8:
-                T = None
-                header = self.processHeader (block)
-                if header.getCmd() == rawTDIFile.TD_CMD_TASK_ENTRY:
-                    T = self.processTaskEntry (fp, header)
-                elif header.getCmd () == rawTDIFile.TD_CMD_TASK_EXIT:
-                    T = self.processTaskExit (fp, header)
-                elif header.getCmd () == rawTDIFile.TD_CMD_ISR_ENTRY:
-                    T = self.processIsrEntry (fp, header)
-                elif header.getCmd () == rawTDIFile.TD_CMD_ISR_EXIT:
-                    T = self.processIsrExit (fp, header)
-                elif header.getCmd () == rawTDIFile.TD_CMD_SOFTIRQ_ENTRY:
-                    T = self.processIsrEntry (fp, header, True)
-                elif header.getCmd () == rawTDIFile.TD_CMD_SOFTIRQ_EXIT:
-                    T = self.processIsrExit (fp, header, True)
-                else:
-                    print "Unkown cmd " + str(header.getCmd ())
-                    consecutiveErrors += 1
-                
-                if T:
-                    cbFunction (T)
-                    consecutiveErrors = 0
 
-                if consecutiveErrors > 5:
-                    # This does not look as a raw file
-                    return -1
-
-                block = fp.read(8)
-        
-        finally:
-            fp.close ()
-
-        return 0
-
-    def isRawFile (self, fileName):
-        isRawFile = False
-        self.readHardIsr (fileName)
-        fp = open (fileName, "rb")
-        try:
-            block = fp.read (8)
+        block = fp.read (8)
+        while len (block) == 8:
+            T = None
             header = self.processHeader (block)
-            if (header.getCmd() > rawTDIFile.TD_CMD_NULL) and \
-                (header.getCmd () < rawTDIFile.TD_CMD_LAST):
-                    isRawFile = True
-        finally:
-            fp.close ()
+            if header.getCmd() == rawTDIFile.TD_CMD_TASK_ENTRY:
+                T = self.processTaskEntry (fp, header)
+            elif header.getCmd () == rawTDIFile.TD_CMD_TASK_EXIT:
+                T = self.processTaskExit (fp, header)
+            elif header.getCmd () == rawTDIFile.TD_CMD_ISR_ENTRY:
+                T = self.processIsrEntry (fp, header)
+            elif header.getCmd () == rawTDIFile.TD_CMD_ISR_EXIT:
+                T = self.processIsrExit (fp, header)
+            elif header.getCmd () == rawTDIFile.TD_CMD_SOFTIRQ_ENTRY:
+                T = self.processIsrEntry (fp, header, True)
+            elif header.getCmd () == rawTDIFile.TD_CMD_SOFTIRQ_EXIT:
+                T = self.processIsrExit (fp, header, True)
+            else:
+                print "Unkown cmd " + str(header.getCmd ())
+                consecutiveErrors += 1
 
-        return isRawFile 
+            if T:
+                cbFunction (T)
+                consecutiveErrors = 0
+
+            if consecutiveErrors > 5:
+                # This does not look as a raw file
+                print "Too many consecutive errors. Invalid file. "
+                return -1
+
+            block = fp.read(8)
+        
+        return (0)
+
 
 if __name__ == '__main__':
     def cbFunction (task):
