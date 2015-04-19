@@ -425,11 +425,6 @@ class TaskList (object):
         R = rawTDIFile.rawTDIFile ()
         retVal = R.readRawFile (fileName, self.processRawTask)
 
-        print "Last time " + str(self._lastTime)
-        print "Num cores " + str(self._numCores)
-        print "Speed " + str(self._speed)
-        print "Num tasks " + str(len(self._tasks))
-
         return retVal
 
     def readFile (self, fileName):

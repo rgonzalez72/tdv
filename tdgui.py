@@ -139,6 +139,9 @@ class TDGUI (wx.Frame):
                 self.btnShow.Enable ()
             else:
                 self.dlg.Destroy ()
+                errorDialog = wx.MessageDialog (None, "Invalid file.",
+                        "Error", wx.OK | wx.ICON_ERROR)
+                errorDialog.ShowModal ()
 
     def OnCloseFile (self, e):
         if len(self._sheets) == 0:
