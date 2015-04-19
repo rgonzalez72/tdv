@@ -1,8 +1,4 @@
 #! /usr/bin/env python
-
-import sys
-import os
-
 ################################################################################
 #  Copyright (C) 2015  Rodolfo Gonzalez <rgonzalez72@yahoo.com>
 #
@@ -21,7 +17,6 @@ import os
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 ################################################################################
-
 
 """
 /*
@@ -125,6 +120,9 @@ import os
  *
  *
  */"""
+
+import sys
+import os
 
 class TimeDoctorEntry (object):
     

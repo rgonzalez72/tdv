@@ -110,7 +110,7 @@ class Task (object):
         self._percentage = 0.0
         self._selected = True
         self._cores = 0x00000000 # A 32 bitmap
-        self._lastStart = None
+        self._lastStart = {}
 
     def clone (self):
         T = Task (self._name, self._type, self._code)
@@ -214,14 +214,22 @@ class Task (object):
             coreStr += str(c) + " "
         return coreStr
 
-    def getLastStart (self):
-        return self._lastStart
+    def checkLastStart (self,cpu):
+        key = str(cpu)
+        if not key in self._lastStart:
+            self._lastStart [key] = None
 
-    def setLastStart (self, lastStart):
-        self._lastStart = lastStart
+    def getLastStart (self, cpu):
+        self.checkLastStart (cpu)
+        return self._lastStart [str(cpu)]
 
-    def resetLastStart (self):
-        self._lastStart = None
+    def setLastStart (self, lastStart, cpu):
+        self.checkLastStart (cpu)
+        self._lastStart [str(cpu)] = lastStart
+
+    def resetLastStart (self, cpu):
+        self.checkLastStart (cpu)
+        self._lastStart [str(cpu)] = None
 
 class TaskList (object):
     def __init__ (self):
@@ -275,7 +283,7 @@ class TaskList (object):
                 stTime = float (parts[3]) * self._speed
                 code = parts[2]
                 T = self.findTaskByCode (code)
-                T.setLastStart (stTime)
+                T.setLastStart (stTime, currentCore)
             elif line.startswith ("STO"):
                 if self._speed == 0 or currentCore == -1:
                     return -1
@@ -283,10 +291,11 @@ class TaskList (object):
                 endTime = float (parts[3]) * self._speed
                 code = parts[2]
                 T = self.findTaskByCode (code)
-                if T.getLastStart () != None:
-                    E = TaskExecution (T.getLastStart(), endTime , currentCore)
+                if T.getLastStart (currentCore) != None:
+                    E = TaskExecution (T.getLastStart(currentCore), endTime ,
+                            currentCore)
                     T.addExecution (E)
-                    T.resetLastStart ()
+                    T.resetLastStart (currentCore)
                 if endTime > self._lastTime:
                     self._lastTime = endTime
             elif line.startswith ("SPEED"):
@@ -398,17 +407,17 @@ class TaskList (object):
                 theTask = Task (task.getName (), taskType, task.getTaskId())
                 self._tasks.append (theTask)
 
+            cpu = task.getHeader ().getCpu ()
             if isEntry:
-                theTask.setLastStart (task.getHeader().getTimeStamp ())
+                theTask.setLastStart (task.getHeader().getTimeStamp (), cpu)
             else:
-                staTime = theTask.getLastStart ()
+                staTime = theTask.getLastStart (cpu)
                 # At the start of the file we may have stop with no start
                 if staTime != None:
                     E = TaskExecution (staTime, 
-                            task.getHeader().getTimeStamp () ,
-                            task.getHeader().getCpu())
+                            task.getHeader().getTimeStamp () , cpu)
                     theTask.addExecution (E)
-                    theTask.resetLastStart ()
+                    theTask.resetLastStart (cpu)
         else:
             print "Unexpected task type!!!"
             
