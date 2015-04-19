@@ -286,6 +286,7 @@ class TaskList (object):
                 if T.getLastStart () != None:
                     E = TaskExecution (T.getLastStart(), endTime , currentCore)
                     T.addExecution (E)
+                    T.resetLastStart ()
                 if endTime > self._lastTime:
                     self._lastTime = endTime
             elif line.startswith ("SPEED"):

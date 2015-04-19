@@ -111,6 +111,7 @@ class TDGUI (wx.Frame):
     def OnOpenFile (self, e):
         diag = wx.FileDialog (self, "Select a time doctor file to open", 
                 os.getcwd(), "", "Time doctor files (*.tdi)|*.tdi|" +
+                "Time doctor raw files (*.raw)|*.raw|" +
                 "All files|*.*", wx.OPEN)
 
         if diag.ShowModal () == wx.ID_OK:
@@ -121,20 +122,23 @@ class TDGUI (wx.Frame):
             fullPath = os.path.join (diag.GetDirectory(), tdiFileName)
             taskList = Task.TaskList ()
             self.dlg.Update (20)
-            taskList.readTDFile (fullPath)
-            self.dlg.Update (40)
-            taskList.calcPercentage ()
-            self.dlg.Update (60)
-            taskList.sortByName ()
-            self.dlg.Update (80)
-            self.dlg.Destroy ()
-            sheet = TaskGrid (self.notebook, tdiFileName, taskList, self)
-            sheet.SetFocus ()
-            self._sheets.append (sheet)
-            self.notebook.AddPage (sheet, tdiFileName, True)
-            self.btnSelAll.Enable ()
-            self.btnUnselAll.Enable ()
-            self.btnShow.Enable ()
+            retVal = taskList.readFile (fullPath)
+            if retVal == 0:
+                self.dlg.Update (40)
+                taskList.calcPercentage ()
+                self.dlg.Update (60)
+                taskList.sortByName ()
+                self.dlg.Update (80)
+                self.dlg.Destroy ()
+                sheet = TaskGrid (self.notebook, tdiFileName, taskList, self)
+                sheet.SetFocus ()
+                self._sheets.append (sheet)
+                self.notebook.AddPage (sheet, tdiFileName, True)
+                self.btnSelAll.Enable ()
+                self.btnUnselAll.Enable ()
+                self.btnShow.Enable ()
+            else:
+                self.dlg.Destroy ()
 
     def OnCloseFile (self, e):
         if len(self._sheets) == 0:
