@@ -381,15 +381,15 @@ class TaskList (object):
         elif (type (task) is rawTDIFile.IsrEntry ):
             isEntry = True 
             if task.getIsSoft ():
-                taskType = Task.TYPE_ISR
-            else:
                 taskType = Task.TYPE_AGENT
+            else:
+                taskType = Task.TYPE_ISR
         elif (type (task) is rawTDIFile.IsrExit):
             isEntry = False 
             if task.getIsSoft ():
-                taskType = Task.TYPE_ISR
-            else:
                 taskType = Task.TYPE_AGENT
+            else:
+                taskType = Task.TYPE_ISR
 
         if taskType != None:
             # Check is the task already exits
