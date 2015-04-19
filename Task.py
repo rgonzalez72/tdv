@@ -21,6 +21,7 @@
 
 
 import sys
+import rawTDIFile
 
 class TaskExecution (object):
     def __init__ (self, timeIn, timeOut, core):
@@ -242,7 +243,8 @@ class TaskList (object):
         self._filename = fileName
         fp = open (fileName, "r")
         self._lastTime = 0
-        currentCore = 0
+        currentCore = -1
+        self._speep = 0
         for line in fp:
             if line.startswith ("CPU"):
                 pos = line.find ("-")
@@ -255,10 +257,14 @@ class TaskList (object):
                 if not T in self._tasks:
                     self._tasks.append (T)
             elif line.startswith ("STA"):
+                if self._speed == 0 or currentCore == -1:
+                    return -1
                 parts = line.strip ().split (" ")
                 stTime = float (parts[3]) * self._speed
                 stTimes.append (stTime)
             elif line.startswith ("STO"):
+                if self._speed == 0 or currentCore == -1:
+                    return -1
                 if len (stTimes) >= 1:
                     parts = line.strip ().split (" ")
                     endTime = float (parts[3]) * self._speed
@@ -276,6 +282,10 @@ class TaskList (object):
                 # Units are nanoseconds
                 self._speed = 1000000000.0 /float (parts[1])
             
+        if self._speed == 0 or currentCore == -1 or len(self._tasks) <1:
+            return -1
+        else:
+            return 0
 
     def getLastTime (self):
         return self._lastTime
@@ -337,12 +347,32 @@ class TaskList (object):
                 break
         return anySel
 
+    def readRawFile (self, fileName):
+        retVal = -1
+        return retVal
+
+    def readFile (self, fileName):
+        # Determine the type of file and 0 if ok -1 is invalid 
+        retVal = -1
+
+        try:
+            retVal = self.readTDFile (fileName)
+        except:
+            pass
+        
+        if retVal != 0:
+            try:
+                retVal = self.readRawFile (fileName)
+            except:
+                pass
+
+        return retVal
+
 if __name__ == '__main__':
     T = TaskList ()
-    T.readTDFile (sys.argv[1])
-
-    for t in T._tasks:
-        S = t.getSummary (0, T.getLastTime(), Task.ALL_CORES)
-        print t
-        print S
-    print len (T._tasks)
+    if T.readFile (sys.argv[1]) == 0:
+        for t in T._tasks:
+            S = t.getSummary (0, T.getLastTime(), Task.ALL_CORES)
+            print t
+            print S
+        print len (T._tasks)

@@ -153,10 +153,11 @@ class TimeDoctorEntry (object):
         return self._ts
 
 class TaskAction (object):
-    def __init__ (self, header, name, tgid):
+    def __init__ (self, header, name, tgid, isEntry):
         self._header = header
         self._name =name
         self._tgid = tgid
+        self._isEntry = isEntry
 
     def getHeader (self):
         return self._header
@@ -167,19 +168,25 @@ class TaskAction (object):
     def getTGID (self):
         return self._tgid
 
+    def getTaskId (self):
+        return str (self._id) + str(self._tgid)
+
+    def getIsEntry (self):
+        return self._isEntry
+
     def __str__ (self):
         return str(self._header) + " name: " + self._name + " TGID: " + str(self._tgid)
 
 class TaskEntry (TaskAction):
     def __init__ (self, header, name, tgid):
-        TaskAction.__init__ (self, header, name, tgid)
+        TaskAction.__init__ (self, header, name, tgid, True)
 
     def __str__ (self):
         return "Task Entry " + TaskAction.__str__ (self)
 
 class TaskExit (TaskAction):
     def __init__ (self, header, name, tgid):
-        TaskAction.__init__ (self, header, name, tgid)
+        TaskAction.__init__ (self, header, name, tgid, False)
 
     def __str__ (self):
         return "Task Exit " + TaskAction.__str__ (self)
@@ -189,10 +196,10 @@ class Isr (object):
     SOFT_IRQ_NAMES = ['HI', 'TIMER', 'NET_TX', 'NET_RX', 'BLOCK', 
         'BLOCK_IOPOLL', 'TASKLET', 'SCHED', 'HRTIMER', 'RCU']
 
-    def __init__ (self, header, hardIsr, soft):
+    def __init__ (self, header, hardIsr, soft, isEntry):
         self._header = header
         self._soft = soft
-        self._name = None
+        self._isEntry = isEntry
         if soft:
             try:
                 self._name = Isr.SOFT_IRQ_NAMES [self._header.getId ()]
@@ -213,6 +220,12 @@ class Isr (object):
     def getName ():
         return self._name
 
+    def getTaskId (self):
+        return "IRQ_" + str(self._id)
+
+    def getIsEntry (self):
+        return self._isEntry
+
     def __str__ (self):
         retVal = str (self._header)
         if self._name:
@@ -221,7 +234,7 @@ class Isr (object):
 
 class IsrEntry (Isr):
     def __init__ (self, header, hardIsr, soft):
-        Isr.__init__ (self, header, hardIsr, soft)
+        Isr.__init__ (self, header, hardIsr, soft, True)
 
     def __str__ (self):
         beginning = ""
@@ -231,7 +244,7 @@ class IsrEntry (Isr):
 
 class IsrExit (Isr):
     def __init__ (self, header, hardIsr, soft):
-        Isr.__init__ (self, header, hardIsr, soft)
+        Isr.__init__ (self, header, hardIsr, soft, False)
 
     def __str__ (self):
         beginning = ""
@@ -269,6 +282,8 @@ class rawTDIFile (object):
     TD_CMD_KPROBE_SINGLE         = 19
 
     TD_CMD_TASK_MIGRATE          = 20
+
+    TD_CMD_LAST                  = 21
 
     HARD_ISR_FILE = "cat_proc_interrupts.txt"
 
@@ -345,41 +360,65 @@ class rawTDIFile (object):
             fp.close ()
 
 
-    def readRawFile (self, fileName):
+    def readRawFile (self, fileName, cbFunction):
+        consecutiveErrors = 0
         self.readHardIsr (fileName)
         fp = open (fileName, "rb")
         try:
             block = fp.read (8)
             while len (block) == 8:
+                T = None
                 header = self.processHeader (block)
                 if header.getCmd() == rawTDIFile.TD_CMD_TASK_ENTRY:
-                    entry = self.processTaskEntry (fp, header)
-#print entry
+                    T = self.processTaskEntry (fp, header)
                 elif header.getCmd () == rawTDIFile.TD_CMD_TASK_EXIT:
-                    exit = self.processTaskExit (fp, header)
-#                    print exit
+                    T = self.processTaskExit (fp, header)
                 elif header.getCmd () == rawTDIFile.TD_CMD_ISR_ENTRY:
-                    entry = self.processIsrEntry (fp, header)
-                    print entry
+                    T = self.processIsrEntry (fp, header)
                 elif header.getCmd () == rawTDIFile.TD_CMD_ISR_EXIT:
-                    exit = self.processIsrExit (fp, header)
-                    print exit
+                    T = self.processIsrExit (fp, header)
                 elif header.getCmd () == rawTDIFile.TD_CMD_SOFTIRQ_ENTRY:
-                    entry = self.processIsrEntry (fp, header, True)
-                    print entry
+                    T = self.processIsrEntry (fp, header, True)
                 elif header.getCmd () == rawTDIFile.TD_CMD_SOFTIRQ_EXIT:
-                    exit = self.processIsrExit (fp, header, True)
-                    print exit
+                    T = self.processIsrExit (fp, header, True)
                 else:
                     print "Unkown cmd " + str(header.getCmd ())
-#break
+                    consecutiveErrors += 1
+                
+                if T:
+                    cbFunction (T)
+                    consecutiveErrors = 0
+
+                if consecutiveErrors > 5:
+                    # This does not look as a raw file
+                    return -1
 
                 block = fp.read(8)
         
         finally:
             fp.close ()
 
+        return 0
+
+    def isRawFile (self, fileName):
+        isRawFile = False
+        self.readHardIsr (fileName)
+        fp = open (fileName, "rb")
+        try:
+            block = fp.read (8)
+            header = self.processHeader (block)
+            if (header.getCmd() > rawTDIFile.TD_CMD_NULL) and \
+                (header.getCmd () < rawTDIFile.TD_CMD_LAST):
+                    isRawFile = True
+        finally:
+            fp.close ()
+
+        return isRawFile 
 
 if __name__ == '__main__':
+    def cbFunction (task):
+        print ">> " + str(task)
+
     R = rawTDIFile ()
-    R.readRawFile (sys.argv[1])
+    retVal = R.readRawFile (sys.argv[1], cbFunction)
+    sys.exit (retVal)
