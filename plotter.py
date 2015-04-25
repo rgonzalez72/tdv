@@ -40,8 +40,9 @@ class Plotter (wx.Frame):
     Y_LABEL_INITIAL = 20
     Y_STEP = 20
 
-    def __init__ (self, parent, taskList):
+    def __init__ (self, parent, taskList, separateThreads):
         self._taskList = taskList
+        self._separateThreads = separateThreads
         fileName = os.path.basename (self._taskList.getFileName ())
         wx.Frame.__init__ (self, parent, wx.ID_ANY, "Showing " + fileName)
         self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
@@ -76,12 +77,23 @@ class Plotter (wx.Frame):
         y_names = []
         for T in reversed (self._taskList._tasks):
             if T.getSelected ():
-                numRows += 1
-                label_y.append (yl)
-                yl += Plotter.Y_STEP
-                y += Plotter.Y_STEP
-                grid_y.append (y)
-                y_names.append (T.getName ())
+                if self._separateThreads:
+                    cores = T.getCoreList ()
+                    for c in cores:
+                        numRows += 1
+                        label_y.append (yl)
+                        yl += Plotter.Y_STEP
+                        y += Plotter.Y_STEP
+                        grid_y.append (y)
+                        name = T.getName () + "_" + str(c)
+                        y_names.append (name)
+                else:
+                    numRows += 1
+                    label_y.append (yl)
+                    yl += Plotter.Y_STEP
+                    y += Plotter.Y_STEP
+                    grid_y.append (y)
+                    y_names.append (T.getName ())
 
 
         majl = plt.FixedLocator (grid_y)
@@ -99,15 +111,30 @@ class Plotter (wx.Frame):
 
         for T in reversed (self._taskList._tasks):
             if T.getSelected ():
-                for e in T._executions:
-                    color = Plotter.COLORS [e.getCore ()]
-                    s = [[e.getTimeIn (), posY], 
-                         [e.getTimeIn (), posY + Plotter.Y_STEP -2],
-                         [e.getTimeOut (), posY + Plotter.Y_STEP -2],
-                         [e.getTimeOut (), posY]]
-                    segments.append (s)
-                    colors.append (color)
-                posY += Plotter.Y_STEP
+                if self._separateThreads:
+                    coreList = T.getCoreList ()
+                    for c in coreList:
+                        for e in T._executions:
+                            if c == e.getCore ():
+                                color = Plotter.COLORS [c]
+                                s = [[e.getTimeIn (), posY], 
+                                    [e.getTimeIn (), posY + Plotter.Y_STEP -2],
+                                    [e.getTimeOut (), posY + Plotter.Y_STEP -2],
+                                    [e.getTimeOut (), posY]]
+                                segments.append (s)
+                                colors.append (color)
+                        posY += Plotter.Y_STEP
+                else:
+                    for e in T._executions:
+                        color = Plotter.COLORS [e.getCore ()]
+                        s = [[e.getTimeIn (), posY], 
+                            [e.getTimeIn (), posY + Plotter.Y_STEP -2],
+                            [e.getTimeOut (), posY + Plotter.Y_STEP -2],
+                            [e.getTimeOut (), posY]]
+                        segments.append (s)
+                        colors.append (color)
+
+                    posY += Plotter.Y_STEP
 
         coll = LineCollection (segments, lw=2, colors=colors)
         ax1.add_collection (coll)

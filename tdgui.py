@@ -45,6 +45,12 @@ class TDGUI (wx.Frame):
         self._sheets = []
         self._currentSheet = 0
 
+        # First horizontal panel with check button 
+        self.threadCheck = wx.CheckBox (self, wx.ID_ANY, "Separate &Threads")
+        hbox0.Add (self.threadCheck, 0, wx.TOP | wx.LEFT | wx.BOTTOM, 10) 
+        vbox.Add (hbox0, 0, wx.LEFT)
+        vbox.Add ((5,5) , 0)
+
         self.btnSel = wx.Button (self, wx.ID_ANY, "&Show")
         self.btnUnsel = wx.Button (self, wx.ID_ANY, "Hi&de") 
         self.btnSelAll = wx.Button (self, wx.ID_ANY, "Show &All")
@@ -183,7 +189,8 @@ class TDGUI (wx.Frame):
             self.btnShow.Disable ()
 
     def OnShow (self, e):
-        frame = plotter.Plotter (self, self._sheets [self._currentSheet].getClonedList ())
+        separateThreads = self.threadCheck.IsChecked ()
+        frame = plotter.Plotter (self, self._sheets [self._currentSheet].getClonedList (), separateThreads)
         frame.Show ()
 
     def OnChange (self, e):
