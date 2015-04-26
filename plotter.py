@@ -28,6 +28,7 @@ from matplotlib.figure import Figure
 from matplotlib.axes import Subplot
 import os
 import wx
+import Task
 
 class Plotter (wx.Frame):
 
@@ -152,7 +153,7 @@ class Plotter (wx.Frame):
         self.toolbar.update ()
 
     def x_formatter (self, x, pos):
-        return self._taskList.getTimeFormatted (x)
+        return Task.TaskList.getTimeFormatted (x)
 
     def GetToolBar(self):
         # You will need to override GetToolBar if you are using an

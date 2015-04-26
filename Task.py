@@ -357,7 +357,8 @@ class TaskList (object):
     def getSpeed (self):
         return self._speed 
 
-    def getTimeFormatted (self, t):
+    @staticmethod
+    def getTimeFormatted (t):
         # Convert to seconds and add the units
         return "%1.03lf s" % (t / 1000000000.0)
 

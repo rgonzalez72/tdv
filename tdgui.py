@@ -28,6 +28,91 @@ import sys
 import Task
 import plotter
 
+class RangeSlider (wx.Panel):
+    """ A class with a double slider to select a range of times """
+    MAX_VALUE = 1000
+
+    def __init__ (self, parent, id, minTime, maxTime):
+        super(RangeSlider, self).__init__(parent, id) 
+
+        self.minTime = minTime 
+        self.maxTime = maxTime
+
+        sizer = wx.FlexGridSizer (rows=2, cols = 3, vgap = 5, hgap = 5)
+        self.sldMax = wx.Slider(self, value=RangeSlider.MAX_VALUE, minValue=0,
+                maxValue=self.MAX_VALUE,
+                style=wx.SL_HORIZONTAL )
+        self.sldMin = wx.Slider (self, value=0, minValue=0, 
+                maxValue=self.MAX_VALUE,
+                style =wx.SL_HORIZONTAL )
+        
+        self.sldMax.Bind(wx.EVT_SCROLL, self.OnSliderScroll)
+        self.sldMin.Bind (wx.EVT_SCROLL, self.OnSliderScroll2)
+        
+        self.txtMax = wx.StaticText(self, label= self.formatTime (self.maxTime))               
+        self.txtMin = wx.StaticText(self, label=self.formatTime (self.minTime))               
+        
+        self.labMin = wx.StaticText (self,
+                label="Min " + self.formatTime (self.minTime))
+        self.labMax = wx.StaticText (self,
+                label="Max " + self.formatTime (self.maxTime))
+
+        sizer.Add (self.labMin, 0, wx.LEFT, 10)
+        sizer.Add (self.sldMax, 1, wx.EXPAND)
+        sizer.Add (self.labMax, 0, wx.RIGHT, 10)
+        sizer.Add (self.txtMin, 1, wx.ALIGN_CENTER)
+        sizer.Add (self.sldMin, 1, wx.EXPAND)
+        sizer.Add (self.txtMax, 1, wx.ALIGN_CENTER)
+        sizer.AddGrowableCol (1, 1)
+
+        self.SetSizer (sizer)
+        sizer.Fit (self)
+        
+    def formatTime (self, t):
+        """ The times are nanoseconds """
+        return Task.TaskList.getTimeFormatted (t)
+
+    def formatValue (self, v):
+        t = v * (self.maxTime - self.minTime) / 1000
+        return self.formatTime (t)
+
+    def OnSliderScroll(self, e):
+        
+        val = self.sldMax.GetValue()
+        
+        valMin = self.sldMin.GetValue ()
+        if valMin > val:
+            self.sldMin.SetValue (val)
+            self.txtMin.SetLabel (self.formatValue(val))
+        
+        self.txtMax.SetLabel(self.formatValue(val))        
+
+    def OnSliderScroll2 (self, e):
+        val = self.sldMin.GetValue()
+        
+        valMax = self.sldMax.GetValue ()
+        if valMax < val:
+            self.sldMax.SetValue (val)
+            self.txtMax.SetLabel (self.formatValue(val))
+        
+        self.txtMin.SetLabel(self.formatValue(val))        
+
+    def Enable (self):
+        self.sldMax.Enable ()
+        self.sldMin.Enable ()
+        self.txtMin.Enable ()
+        self.txtMax.Enable ()
+        self.labMin.Enable ()
+        self.labMax.Enable ()
+
+    def Disable (self):
+        self.sldMax.Disable ()
+        self.sldMin.Disable ()
+        self.txtMin.Disable ()
+        self.txtMax.Disable ()
+        self.labMin.Disable ()
+        self.labMax.Disable ()
+                      
 class TDGUI (wx.Frame):
     def __init__ (self, parent, id, title):
         wx.Frame.__init__ (self, parent, id, title, size= (800, 600))
@@ -47,8 +132,12 @@ class TDGUI (wx.Frame):
 
         # First horizontal panel with check button 
         self.threadCheck = wx.CheckBox (self, wx.ID_ANY, "Separate &Threads")
-        hbox0.Add (self.threadCheck, 0, wx.TOP | wx.LEFT | wx.BOTTOM, 10) 
-        vbox.Add (hbox0, 0, wx.LEFT)
+        self.rangeSlider = RangeSlider (self, wx.ID_ANY, 0, 1000000000)
+        self.rangeSlider.Disable ()
+        hbox0.Add (self.threadCheck, 0, wx.TOP | wx.LEFT | wx.BOTTOM | wx.LEFT,
+                10) 
+        hbox0.Add (self.rangeSlider, 1, wx.EXPAND) 
+        vbox.Add (hbox0, 0, wx.FIXED_MINSIZE)
         vbox.Add ((5,5) , 0)
 
         self.btnSel = wx.Button (self, wx.ID_ANY, "&Show")
