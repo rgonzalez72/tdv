@@ -279,6 +279,15 @@ class TDGUI (wx.Frame):
             self.statusbar.SetStatusText (' ')
             self.rangeSlider.SetRange (0, 1000000000)
             self.rangeSlider.Disable ()
+        else:
+            S = self._sheets [ self.notebook.GetSelection()].getList ()
+            statusText = "Total time: " + S.getTimeFormatted (S.getLastTime ()) + \
+                ", Number of cores: " + str(S.getNumberOfCores ()) + \
+                ", Number of threads: " + str (S.getNumberOfTasks ())
+            self.statusbar.SetStatusText (statusText)
+
+            self.rangeSlider.SetRange (0, S.getLastTime ())
+            self.rangeSlider.Enable ()
 
     def OnSelect (self, e):
         self._sheets [self._currentSheet].SelectRange ()
