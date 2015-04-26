@@ -112,6 +112,17 @@ class RangeSlider (wx.Panel):
         self.txtMax.Disable ()
         self.labMin.Disable ()
         self.labMax.Disable ()
+
+    def SetRange (self, minVal, maxVal):    
+        self.minTime = minTime 
+        self.maxTime = maxTime
+        self.labMin.SetLabel ("Min " + self.formatTime (self.minTime))
+        self.labMax.SetLabel ("Max " + self.formatTime (self.maxTime))
+        self.txtMax.SetLabel (self.formatTime (self.maxTime))               
+        self.txtMin.SetLabel (self.formatTime (self.minTime))               
+        self.sldMin.SetValue (0)
+        self.sldMax.SetValue (RangeSlider.MAX_VALUE)
+        
                       
 class TDGUI (wx.Frame):
     def __init__ (self, parent, id, title):
@@ -137,7 +148,7 @@ class TDGUI (wx.Frame):
         hbox0.Add (self.threadCheck, 0, wx.TOP | wx.LEFT | wx.BOTTOM | wx.LEFT,
                 10) 
         hbox0.Add (self.rangeSlider, 1, wx.EXPAND) 
-        vbox.Add (hbox0, 0, wx.FIXED_MINSIZE)
+        vbox.Add (hbox0, 0, wx.EXPAND)
         vbox.Add ((5,5) , 0)
 
         self.btnSel = wx.Button (self, wx.ID_ANY, "&Show")
