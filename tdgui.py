@@ -72,9 +72,19 @@ class RangeSlider (wx.Panel):
         """ The times are nanoseconds """
         return Task.TaskList.getTimeFormatted (t)
 
-    def formatValue (self, v):
+    def getTimeFromValue (self, v):
         t = v * (self.maxTime - self.minTime) / 1000
+        return t
+
+    def formatValue (self, v):
+        t = self.getTimeFromValue (v)
         return self.formatTime (t)
+
+    def getSelectedIniTime (self):
+        return self.getTimeFromValue (self.sldMin.GetValue ())
+
+    def getSelectedEndTime (self):
+        return self.getTimeFromValue (self.sldMax.GetValue ())
 
     def OnSliderScroll(self, e):
         
@@ -113,7 +123,7 @@ class RangeSlider (wx.Panel):
         self.labMin.Disable ()
         self.labMax.Disable ()
 
-    def SetRange (self, minVal, maxVal):    
+    def SetRange (self, minTime, maxTime):    
         self.minTime = minTime 
         self.maxTime = maxTime
         self.labMin.SetLabel ("Min " + self.formatTime (self.minTime))
@@ -267,6 +277,8 @@ class TDGUI (wx.Frame):
             self.btnUnselAll.Disable ()
             self.btnShow.Disable ()
             self.statusbar.SetStatusText (' ')
+            self.rangeSlider.SetRange (0, 1000000000)
+            self.rangeSlider.Disable ()
 
     def OnSelect (self, e):
         self._sheets [self._currentSheet].SelectRange ()
@@ -290,7 +302,10 @@ class TDGUI (wx.Frame):
 
     def OnShow (self, e):
         separateThreads = self.threadCheck.IsChecked ()
-        frame = plotter.Plotter (self, self._sheets [self._currentSheet].getClonedList (), separateThreads)
+        frame = plotter.Plotter (self, 
+                self._sheets [self._currentSheet].getClonedList (), 
+                separateThreads, self.rangeSlider.getSelectedIniTime(),
+                self.rangeSlider.getSelectedEndTime())
         frame.Show ()
 
     def OnChange (self, e):
@@ -300,6 +315,9 @@ class TDGUI (wx.Frame):
             ", Number of cores: " + str(S.getNumberOfCores ()) + \
             ", Number of threads: " + str (S.getNumberOfTasks ())
         self.statusbar.SetStatusText (statusText)
+
+        self.rangeSlider.SetRange (0, S.getLastTime ())
+        self.rangeSlider.Enable ()
 
     def EnableSelect (self):
         self.btnSel.Enable ()

@@ -41,9 +41,11 @@ class Plotter (wx.Frame):
     Y_LABEL_INITIAL = 20
     Y_STEP = 20
 
-    def __init__ (self, parent, taskList, separateThreads):
+    def __init__ (self, parent, taskList, separateThreads, iniTime, endTime):
         self._taskList = taskList
         self._separateThreads = separateThreads
+        self._iniTime = iniTime
+        self._endTime = endTime
         fileName = os.path.basename (self._taskList.getFileName ())
         wx.Frame.__init__ (self, parent, wx.ID_ANY, "Showing " + fileName)
         self.SetIcon (wx.Icon ('tdv.ico', wx.BITMAP_TYPE_ICO))
@@ -104,7 +106,7 @@ class Plotter (wx.Frame):
         fileName = os.path.basename (self._taskList.getFileName ())
 
         ax1 = self.fig.add_subplot (111, autoscale_on=False,  
-                xlim =(0,self._taskList.getLastTime()), ylim =(-10, 220))
+                xlim =(self._iniTime , self._endTime), ylim =(-10, 220))
         posY = Plotter.Y_INITIAL + 1
 
         segments = []
@@ -117,23 +119,27 @@ class Plotter (wx.Frame):
                     for c in coreList:
                         for e in T._executions:
                             if c == e.getCore ():
-                                color = Plotter.COLORS [c]
-                                s = [[e.getTimeIn (), posY], 
-                                    [e.getTimeIn (), posY + Plotter.Y_STEP -2],
-                                    [e.getTimeOut (), posY + Plotter.Y_STEP -2],
-                                    [e.getTimeOut (), posY]]
-                                segments.append (s)
-                                colors.append (color)
+                                if e.getTimeIn () > self._iniTime and \
+                                    e.getTimeOut () < self._endTime:
+                                    color = Plotter.COLORS [c]
+                                    s = [[e.getTimeIn (), posY], 
+                                        [e.getTimeIn (), posY + Plotter.Y_STEP -2],
+                                        [e.getTimeOut (), posY + Plotter.Y_STEP -2],
+                                        [e.getTimeOut (), posY]]
+                                    segments.append (s)
+                                    colors.append (color)
                         posY += Plotter.Y_STEP
                 else:
                     for e in T._executions:
-                        color = Plotter.COLORS [e.getCore ()]
-                        s = [[e.getTimeIn (), posY], 
-                            [e.getTimeIn (), posY + Plotter.Y_STEP -2],
-                            [e.getTimeOut (), posY + Plotter.Y_STEP -2],
-                            [e.getTimeOut (), posY]]
-                        segments.append (s)
-                        colors.append (color)
+                        if e.getTimeIn () > self._iniTime and \
+                            e.getTimeOut () < self._endTime:
+                            color = Plotter.COLORS [e.getCore ()]
+                            s = [[e.getTimeIn (), posY], 
+                                [e.getTimeIn (), posY + Plotter.Y_STEP -2],
+                                [e.getTimeOut (), posY + Plotter.Y_STEP -2],
+                                [e.getTimeOut (), posY]]
+                            segments.append (s)
+                            colors.append (color)
 
                     posY += Plotter.Y_STEP
 
