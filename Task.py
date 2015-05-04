@@ -56,14 +56,18 @@ class Task (object):
     TYPE_TASK = "0"
     TYPE_ISR = "1"
     TYPE_AGENT = "8"
+    TYPE_IDDLE = "33"
+
 
     TYPE_NAME_TASK = "Task"
     TYPE_NAME_ISR = "Isr"
     TYPE_NAME_AGENT = "Agent"
+    TYPE_NAME_IDDLE = "Iddle"
 
     TYPE_NAMES = {TYPE_TASK : TYPE_NAME_TASK,
                   TYPE_ISR : TYPE_NAME_ISR,
-                  TYPE_AGENT : TYPE_NAME_AGENT, }
+                  TYPE_AGENT : TYPE_NAME_AGENT,
+                  TYPE_IDDLE : TYPE_NAME_IDDLE }
 
     CORES_MAP = [
         0x00000001,
@@ -232,6 +236,7 @@ class Task (object):
         self._lastStart [str(cpu)] = None
 
 class TaskList (object):
+    IDDLE_TASK_CODE = 999999
     def __init__ (self):
         self._tasks =[]
         self._lastTime = 0
@@ -261,6 +266,9 @@ class TaskList (object):
         return theTask
 
     def readTDFile (self, fileName):
+        #  Add a dummy task when there's no other task in the core
+        self.addTask (Task ("iddle", Task.TYPE_IDDLE, TaskList.IDDLE_TASK_CODE))
+
         self._filename = fileName
         fp = open (fileName, "r")
         self._lastTime = 0
@@ -271,6 +279,8 @@ class TaskList (object):
                 pos = line.find ("-")
                 currentCore = int (line.strip () [pos+1])
                 self._numCores += 1
+                self._iddleStart = []
+                self._lastStop = 0.0
             elif line.startswith ("NAM"):
                 parts = line.strip ().split (" ")
                 T = Task (parts[3], parts[1], parts[2])
@@ -284,6 +294,10 @@ class TaskList (object):
                 code = parts[2]
                 T = self.findTaskByCode (code)
                 T.setLastStart (stTime, currentCore)
+                if (len (self._iddleStart) == 0):
+                    self._tasks[0].addExecution (TaskExecution (self._lastStop,
+                                stTime, currentCore))
+                self._iddleStart.append (stTime)
             elif line.startswith ("STO"):
                 if self._speed == 0 or currentCore == -1:
                     return -1
@@ -296,6 +310,10 @@ class TaskList (object):
                             currentCore)
                     T.addExecution (E)
                     T.resetLastStart (currentCore)
+                if (len (self._iddleStart) > 0):
+                    self._iddleStart = self._iddleStart[:-1]
+                if (len (self._iddleStart) == 0):
+                    self._lastStop = endTime
                 if endTime > self._lastTime:
                     self._lastTime = endTime
             elif line.startswith ("SPEED"):
@@ -370,12 +388,20 @@ class TaskList (object):
                 break
         return anySel
 
+    def checkIddleCpu (self, cpu):
+        key = str(cpu)
+        if not key in self._lastStops:
+            self._lastStops [key] = 0.0
+            self._iddleStarts [key] = []
+
 
     def processRawTask (self, task):
         cpu = task.getHeader ().getCpu ()
         timestamp = task.getHeader ().getTimeStamp ()
         if cpu >= self._numCores:
             self._numCores = cpu +1
+
+        self.checkIddleCpu (cpu)
 
         if timestamp > self._lastTime:
             self._lastTime = timestamp
@@ -411,6 +437,11 @@ class TaskList (object):
             cpu = task.getHeader ().getCpu ()
             if isEntry:
                 theTask.setLastStart (task.getHeader().getTimeStamp (), cpu)
+                if len (self._iddleStarts [str(cpu)]) == 0:
+                    self._tasks[0].addExecution ( 
+                        TaskExecution (self._lastStops[str(cpu)],
+                            task.getHeader ().getTimeStamp (), cpu))
+                self._iddleStarts[str(cpu)].append (task.getHeader ().getTimeStamp ())
             else:
                 staTime = theTask.getLastStart (cpu)
                 # At the start of the file we may have stop with no start
@@ -419,6 +450,11 @@ class TaskList (object):
                             task.getHeader().getTimeStamp () , cpu)
                     theTask.addExecution (E)
                     theTask.resetLastStart (cpu)
+
+                if len (self._iddleStarts [str(cpu)]) > 0:
+                    self._iddleStarts [str(cpu)] = \
+                            self._iddleStarts[str(cpu)][:-1]
+                self._lastStops [str(cpu)] = task.getHeader().getTimeStamp ()
         else:
             print "Unexpected task type!!!"
             
@@ -432,6 +468,13 @@ class TaskList (object):
         self._speed = 1 # Not really relevant here
         # A list of started tasks
         self._rawStatus = []
+
+        #  Add a dummy task when there's no other task in the core
+        self.addTask (Task ("iddle", Task.TYPE_IDDLE, TaskList.IDDLE_TASK_CODE))
+
+        self._lastStops = {}
+        self._iddleStarts = {}
+
         R = rawTDIFile.rawTDIFile ()
         retVal = R.readRawFile (fileName, self.processRawTask)
 
@@ -441,16 +484,14 @@ class TaskList (object):
         # Determine the type of file and 0 if ok -1 is invalid 
         retVal = -1
 
+
         try:
             retVal = self.readTDFile (fileName)
         except:
             pass
         
         if retVal != 0:
-#try:
             retVal = self.readRawFile (fileName)
-#            except:
-#                pass
 
         return retVal
 
